@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:minHeight="40dp"
+                    android:minWidth="250dp"
+                    android:previewImage="@drawable/blue4"
+                    android:resizeMode="horizontal"
+                    android:updatePeriodMillis="0"
+                    android:widgetCategory="home_screen"
+                    android:configure="com.pluviostudios.dialin.MainActivity"
+    >
+</appwidget-provider>
