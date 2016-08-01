@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
+import com.pluviostudios.dialin.action.Action;
 import com.pluviostudios.dialin.action.DialinImage;
 import com.pluviostudios.dialin.data.Node;
 import com.pluviostudios.dialin.utilities.ContextHelper;
@@ -27,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
     private Node mRootNode;
     private ButtonsFragment mButtonsFragment;
     private EditFragment mEditFragment;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,8 +111,37 @@ public class MainActivity extends AppCompatActivity {
 
             private void showEditMenu(Node node) {
 
-                // Generate and place EditFragment in bottom frame
-                mEditFragment = EditFragment.buildEditFragment(node);
+                // Generate and setup the EditFragment
+                mEditFragment = EditFragment.buildEditFragment(new EditFragment.OnActionConfigured() {
+
+                    private Node mNodeBeingEdited;
+
+                    public EditFragment.OnActionConfigured setNode(Node node) {
+                        mNodeBeingEdited = node;
+                        return this;
+                    }
+
+                    @Override
+                    public void onActionConfigured(Action action) {
+                        // Once action has been setup through EditFragment, assign the new action to this node
+                        mNodeBeingEdited.setAction(action);
+
+                        // Exit EditFragment
+                        clearEditMenu();
+
+                    }
+
+                    @Override
+                    public void onConfigurationCancelled() {
+
+                        // Exit EditFragment
+                        clearEditMenu();
+
+                    }
+
+                }.setNode(node));
+
+                // Display EditFragment in the bottom frame
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.activity_main_bottom_frame, mEditFragment, EditFragment.TAG)
                         .commit();
@@ -121,17 +150,25 @@ public class MainActivity extends AppCompatActivity {
 
             private void clearEditMenu() {
                 if (mEditFragment != null) {
+
+                    // Remove EditFragment
                     getSupportFragmentManager().beginTransaction().remove(mEditFragment).commit();
+
+                    // Clear any holds
+                    mButtonsFragment.clearHold();
+
                 }
             }
 
         };
 
+        // Todo setup system to set images
         Drawable[] defaultImages = new Drawable[5];
         for (int i = 0; i < 5; i++) {
             defaultImages[i] = getResources().getDrawable(R.drawable.blue4);
         }
 
+        // Todo setup system to set images
         Drawable[] holdImages = new Drawable[5];
         for (int i = 0; i < 5; i++) {
             holdImages[i] = getResources().getDrawable(R.drawable.orange5);
@@ -142,7 +179,6 @@ public class MainActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.activity_main_top_frame, mButtonsFragment, ButtonsFragment.TAG)
                 .commit();
-
 
         // Set OK button to finish app config
         buttonOk.setOnClickListener(new View.OnClickListener() {

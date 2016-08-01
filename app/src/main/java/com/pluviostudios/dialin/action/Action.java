@@ -2,6 +2,10 @@ package com.pluviostudios.dialin.action;
 
 import android.util.Log;
 
+import com.pluviostudios.dialin.action.defaultActions.DefaultAction;
+
+import java.util.ArrayList;
+
 /**
  * Created by spectre on 7/26/16.
  */
@@ -12,13 +16,9 @@ public abstract class Action {
     public String name;
     public int id;
     public DialinImage actionImage;
+    public ArrayList<String> actionArguements;
 
-    public static final Action DefaultDialinAction = new Action("Default", 0) {
-        @Override
-        public boolean onExecute() {
-            return false;
-        }
-    };
+    public static final Action DefaultDialinAction = new DefaultAction();
 
     public Action(String name, int id) {
         this(name, id, DialinImage.defaultActionImage);
@@ -39,6 +39,16 @@ public abstract class Action {
         }
     }
 
+    public void saveArguements() {
+        if (hasConfigurationFragment()) {
+            actionArguements = getConfigurationFragment().getActionArguements();
+        }
+    }
+
     public abstract boolean onExecute();
+
+    public abstract boolean hasConfigurationFragment();
+
+    public abstract ConfigurationFragment getConfigurationFragment();
 
 }

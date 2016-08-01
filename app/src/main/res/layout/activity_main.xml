@@ -20,7 +20,7 @@
         />
 
     <FrameLayout
-        android:id="@+id/activity_main_bottom_frame"
+        android:id="@+id/activity_main_divider"
         android:layout_width="match_parent"
         android:layout_height="4dp"
         android:layout_alignBottom="@+id/activity_main_top_frame"
@@ -34,11 +34,11 @@
         android:text="@string/done"/>
 
     <FrameLayout
-        android:id="@+id/main_frame_bottom"
+        android:id="@+id/activity_main_bottom_frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/main_save_button"
-        android:layout_below="@+id/activity_main_bottom_frame"
+        android:layout_below="@+id/activity_main_divider"
         android:padding="2dp"/>
 
 </RelativeLayout>

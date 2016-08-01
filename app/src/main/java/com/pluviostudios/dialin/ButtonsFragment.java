@@ -49,6 +49,7 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
     public static ButtonsFragment buildButtonsFragment(int count, OnButtonsFragmentButtonClicked onButtonsFragmentButtonClicked, Drawable[] defaultImageList, Drawable[] clickedImageList) {
         ButtonsFragment fragment = buildButtonsFragment(count, onButtonsFragmentButtonClicked);
+        // Todo because we are setting clickedImageList without bundles, it will not be restored on hot-swap and will crash
         fragment.defaultImageList = defaultImageList;
         fragment.clickedImageList = clickedImageList;
         return fragment;
