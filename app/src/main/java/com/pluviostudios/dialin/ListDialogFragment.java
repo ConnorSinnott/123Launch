@@ -104,7 +104,8 @@ public class ListDialogFragment extends DialogFragment {
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                mOnListItemSelected.onListItemSelected();
+                mOnListItemSelected.onListItemSelected(i);
+                dismiss();
             }
         });
 
@@ -129,7 +130,7 @@ public class ListDialogFragment extends DialogFragment {
             Drawable displayIcon = currentItem.drawable;
 
             ((ImageView) convertView.findViewById(R.id.list_item_action_image)).setImageDrawable(displayIcon);
-            ((TextView) convertView.findViewById(R.id.list_item_action_display)).setText(displayName);
+            ((TextView) convertView.findViewById(R.id.list_item_action_text_view)).setText(displayName);
 
             return convertView;
 
@@ -142,7 +143,7 @@ public class ListDialogFragment extends DialogFragment {
     }
 
     public interface OnListItemSelected {
-        void onListItemSelected();
+        void onListItemSelected(int position);
     }
 
 }

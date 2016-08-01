@@ -1,9 +1,13 @@
 package com.pluviostudios.dialin;
 
 import android.appwidget.AppWidgetManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
@@ -15,7 +19,7 @@ import com.pluviostudios.dialin.utilities.ContextHelper;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements ButtonsFragment.OnButtonsFragmentButtonClicked, EditFragment.OnActionConfigured {
+public class MainActivity extends AppCompatActivity implements ButtonsFragment.OnButtonsFragmentButtonClicked, EditFragment.OnActionConfigured, ListDialogFragment.OnListItemSelected {
 
     public static final String TAG = "MainActivity";
 
@@ -23,6 +27,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
     private int widgetId;
     private int widgetButtonCount;
+    private boolean launchOnRight = true;
 
     private Node mRootNode;
     private Node mCurrentNode = mRootNode;
@@ -60,11 +65,28 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
         }
 
+        buildButtonsFragment();
+
+        // Set OK button to finish app config
+        buttonOk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finishConfig();
+            }
+        });
+
+    }
+
+    private void buildButtonsFragment() {
+
         // Load root node
         mRootNode = loadRootNode();
         mCurrentNode = mRootNode;
 
+        clearEditMenu();
+
         // Todo setup system to set images
+        // Todo system should include reversing
         DialinImage[] defaultImages = new DialinImage[5];
         defaultImages[0] = new DialinImage(this, R.drawable.bblue);
         defaultImages[1] = new DialinImage(this, R.drawable.bgreen);
@@ -81,17 +103,14 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
         // Generate and place ButtonsFragment in top frame
         mButtonsFragment = ButtonsFragment.buildButtonsFragment(widgetButtonCount, defaultImages, holdImages);
+
+        // Extra Params
+        if (!launchOnRight)
+            mButtonsFragment.getArguments().putBoolean(ButtonsFragment.EXTRA_LAUNCH_ON_LEFT, true);
+
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.activity_main_top_frame, mButtonsFragment, ButtonsFragment.TAG)
                 .commit();
-
-        // Set OK button to finish app config
-        buttonOk.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finishConfig();
-            }
-        });
 
     }
 
@@ -113,12 +132,10 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
     @Override
     public void onLaunchButtonClicked() {
-
         mCurrentNode.getAction().execute();
         mCurrentNode = mRootNode;
         updateButtonsFragment();
         clearEditMenu();
-
     }
 
     private void updateButtonsFragment() {
@@ -173,19 +190,14 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
     }
 
-    private void finishConfig() {
-        Intent resultValue = new Intent();
-        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
-        setResult(RESULT_OK, resultValue);
-        finish();
-    }
-
-
     @Override
     public void onActionConfigured(Action action) {
 
         // Once action has been setup through EditFragment, assign the new action to this node
         mNodeBeingEdited.setAction(action);
+
+        // Update Buttons Fragment to display the new action
+        updateButtonsFragment();
 
         // Exit EditFragment
         clearEditMenu();
@@ -198,6 +210,60 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         // Exit EditFragment
         clearEditMenu();
 
+    }
+
+    // Used by EditFragment, re-route there
+    @Override
+    public void onListItemSelected(int position) {
+        mEditFragment.onListItemSelected(position);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_main_switch_launch_side:
+
+                // If the user has made progress, alert the user that progress will be lost
+                if (!mRootNode.isBlank) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setIcon(android.R.drawable.stat_sys_warning);
+                    builder.setMessage("To apply this change the widget will need to be reset.");
+                    builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // Set flag for launchOnLeft
+                            launchOnRight = !launchOnRight;
+                            // Rebuild
+                            buildButtonsFragment();
+                        }
+                    });
+                    builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // On Cancel
+                        }
+                    });
+                    builder.setCancelable(true);
+                    builder.create().show();
+                } else {
+                    launchOnRight = !launchOnRight; // Set flag for launchOnLeft
+                    buildButtonsFragment(); // Rebuild
+                }
+                break;
+        }
+        return true;
+    }
+
+    // Call this when widget is ready
+    private void finishConfig() {
+        Intent resultValue = new Intent();
+        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+        setResult(RESULT_OK, resultValue);
+        finish();
     }
 
 }

@@ -11,7 +11,7 @@ public class DefaultAction extends Action {
     public static final String TAG = "DefaultAction";
 
     public DefaultAction() {
-        super("No Action", 0);
+        super("No Action", -1);
     }
 
     @Override

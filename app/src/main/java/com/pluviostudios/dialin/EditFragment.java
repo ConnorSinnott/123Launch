@@ -10,6 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.ViewFlipper;
 
 import com.pluviostudios.dialin.action.Action;
@@ -36,6 +38,8 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
     @BindView(R.id.fragment_edit_action_no_config_flipper) protected ViewFlipper mNoConfigFlipper;
     @BindView(R.id.fragment_edit_action_configure_frame) protected FrameLayout mConfigFragmentFrame;
     @BindView(R.id.fragment_edit_action_list_item) protected View mEditActionListItem;
+    @BindView(R.id.list_item_action_image) ImageView mListItemActionImageView;
+    @BindView(R.id.list_item_action_text_view) TextView mListItemActionTextView;
     @BindView(R.id.fragment_edit_action_ok) protected Button mButtonOk;
     @BindView(R.id.fragment_edit_action_cancel) protected Button mButtonCancel;
 
@@ -98,7 +102,14 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
 
             }
 
+        } else {
+
+            //Otherwise start with default action
+            mAction = Action.DefaultDialinAction;
+
         }
+
+        updateActionListItem();
 
         mEditActionListItem.setOnClickListener(this);
         mButtonOk.setOnClickListener(this);
@@ -106,6 +117,11 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
 
         return mRoot;
 
+    }
+
+    private void updateActionListItem() {
+        mListItemActionTextView.setText(mAction.name);
+        mListItemActionImageView.setImageURI(mAction.actionImage.imageUri);
     }
 
     @Override
@@ -126,11 +142,24 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
         switch (view.getId()) {
             case R.id.fragment_edit_action_ok:
 
-                mAction.saveArguements();
+                // If the currentAction has been changed from the default action with id -1
+                if (mAction.id >= 0) {
 
-                // On OK return the configured fragment using OnActionConfigured
-                if (mOnActionConfigured != null) {
-                    mOnActionConfigured.onActionConfigured(mAction);
+                    mAction.saveArguements();
+
+                    // On OK return the configured fragment using OnActionConfigured
+                    if (mOnActionConfigured != null) {
+                        mOnActionConfigured.onActionConfigured(mAction);
+                    }
+
+                } else {
+
+                    // Otherwise consider this a cancellation
+
+                    if (mOnActionConfigured != null) {
+                        mOnActionConfigured.onConfigurationCancelled();
+                    }
+
                 }
 
                 break;
@@ -146,7 +175,10 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
             case R.id.fragment_edit_action_list_item:
 
                 ArrayList<Pair<String, DialinImage>> list = new ArrayList<>();
-                list.add(new Pair<>("TEST", new DialinImage(getContext(), R.drawable.bblue)));
+
+                for (Action x : ActionManager.actions) {
+                    list.add(new Pair<>(x.name, x.actionImage));
+                }
                 ListDialogFragment listDialogFragment = ListDialogFragment.buildListDialogFragment(list);
                 listDialogFragment.show(getFragmentManager(), ListDialogFragment.TAG);
 
@@ -157,8 +189,10 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
     }
 
     // Used by ListDialogFragment
-    @Override
-    public void onListItemSelected() {
+    public void onListItemSelected(int position) {
+
+        mAction = ActionManager.getInstanceOfAction(position);
+        updateActionListItem();
 
     }
 

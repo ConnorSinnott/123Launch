@@ -1,14 +1,18 @@
 package com.pluviostudios.dialin.action.defaultActions;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
 import com.pluviostudios.dialin.action.DialinImage;
+import com.pluviostudios.dialin.utilities.ContextHelper;
 
 import java.util.ArrayList;
 
@@ -19,13 +23,25 @@ public class ActionLaunchWebsite extends Action {
 
     public static final String TAG = "ActionLaunchWebsite";
 
-    public ActionLaunchWebsite(String name, int id, DialinImage actionImage) {
-        super("Launch Website", 1, null);
+    public ActionLaunchWebsite() {
+        super("Launch Website", 1, new DialinImage(ContextHelper.getContext(), R.drawable.chrome_icon));
     }
 
     @Override
     public boolean onExecute() {
-        return false;
+
+        String address = actionArguements.get(0);
+
+        if (!address.startsWith("http://") && !address.startsWith("https://"))
+            address = "http://" + address;
+
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(address));
+        browserIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        ContextHelper.getContext().startActivity(browserIntent);
+
+        return true;
+
     }
 
     @Override

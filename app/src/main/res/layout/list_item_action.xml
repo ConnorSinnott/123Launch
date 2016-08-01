@@ -20,7 +20,7 @@
         android:src="@android:drawable/ic_menu_call"/>
 
     <TextView
-        android:id="@+id/list_item_action_display"
+        android:id="@+id/list_item_action_text_view"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="6"

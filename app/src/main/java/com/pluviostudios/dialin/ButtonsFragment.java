@@ -28,6 +28,8 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
     private static final String EXTRA_DEFAULT_IMAGE_LIST_URI = "extra_default_image_list_uri";
     private static final String EXTRA_HOLD_IMAGE_LIST_URI = "extra_hold_image_list_uri";
 
+    public static final String EXTRA_LAUNCH_ON_LEFT = "extra_launch_on_right";
+
     private LinearLayout mRoot;
     private ImageButton[] mButtons;
     private ImageButton mHoldButton;
@@ -71,7 +73,13 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
         // Set button count and determine launch index
         int buttonCount = extras.getInt(EXTRA_COUNT);
-        mLaunchButtonIndex = buttonCount - 1;
+
+        // Add support for launch on left
+        if (extras.containsKey(EXTRA_LAUNCH_ON_LEFT) && extras.getBoolean(EXTRA_LAUNCH_ON_LEFT)) {
+            mLaunchButtonIndex = 0;
+        } else {
+            mLaunchButtonIndex = buttonCount - 1;
+        }
 
         // Convert passed URIs to BitmapDrawables
         String[] defaultImageStringArray = extras.getStringArray(EXTRA_DEFAULT_IMAGE_LIST_URI);
@@ -189,16 +197,18 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
             // Alert the listener
             if (buttonIndex != mLaunchButtonIndex) {
 
-                // Launch button should never be held
-
-                // Todo setup hold feature
-
                 mOnButtonsFragmentButtonClicked.onButtonLongClicked(buttonIndex);
 
                 // Set hold image
                 setHoldOnButton(buttonIndex);
 
+            } else {
+
+                // Consider this a launch button click
+                mOnButtonsFragmentButtonClicked.onLaunchButtonClicked();
+
             }
+
         }
 
         return true; // Do not propagate up
