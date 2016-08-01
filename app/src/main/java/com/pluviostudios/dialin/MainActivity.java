@@ -2,7 +2,6 @@ package com.pluviostudios.dialin;
 
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -16,7 +15,7 @@ import com.pluviostudios.dialin.utilities.ContextHelper;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ButtonsFragment.OnButtonsFragmentButtonClicked, EditFragment.OnActionConfigured {
 
     public static final String TAG = "MainActivity";
 
@@ -26,6 +25,9 @@ public class MainActivity extends AppCompatActivity {
     private int widgetButtonCount;
 
     private Node mRootNode;
+    private Node mCurrentNode = mRootNode;
+    private Node mNodeBeingEdited;
+
     private ButtonsFragment mButtonsFragment;
     private EditFragment mEditFragment;
 
@@ -60,122 +62,25 @@ public class MainActivity extends AppCompatActivity {
 
         // Load root node
         mRootNode = loadRootNode();
-
-        // Interface for ButtonsFragment
-        ButtonsFragment.OnButtonsFragmentButtonClicked mOnButtonsFragmentButtonClicked = new ButtonsFragment.OnButtonsFragmentButtonClicked() {
-
-            private Node mCurrentNode = mRootNode;
-
-            @Override
-            public void onButtonClicked(int index) {
-
-                mCurrentNode = mCurrentNode.getChild(index);
-                updateButtonsFragment();
-                clearEditMenu();
-
-            }
-
-            @Override
-            public void onButtonLongClicked(int index) {
-                showEditMenu(mCurrentNode.getChild(index));
-            }
-
-            @Override
-            public void onLaunchButtonClicked() {
-
-                mCurrentNode.getAction().execute();
-                mCurrentNode = mRootNode;
-                updateButtonsFragment();
-                clearEditMenu();
-
-            }
-
-            private void updateButtonsFragment() {
-
-                DialinImage[] currentImages = new DialinImage[widgetButtonCount];
-                for (int i = 0; i < widgetButtonCount - 1; i++) {
-
-                    // Add child images
-                    Node currentChild = mCurrentNode.getChild(i);
-                    currentImages[i] = currentChild.getAction().actionImage;
-
-                }
-
-                // Add current images
-                currentImages[widgetButtonCount - 1] = mCurrentNode.getAction().actionImage;
-
-                // Update button fragment
-                mButtonsFragment.setIcons(currentImages);
-
-            }
-
-            private void showEditMenu(Node node) {
-
-                // Generate and setup the EditFragment
-                mEditFragment = EditFragment.buildEditFragment(new EditFragment.OnActionConfigured() {
-
-                    private Node mNodeBeingEdited;
-
-                    public EditFragment.OnActionConfigured setNode(Node node) {
-                        mNodeBeingEdited = node;
-                        return this;
-                    }
-
-                    @Override
-                    public void onActionConfigured(Action action) {
-                        // Once action has been setup through EditFragment, assign the new action to this node
-                        mNodeBeingEdited.setAction(action);
-
-                        // Exit EditFragment
-                        clearEditMenu();
-
-                    }
-
-                    @Override
-                    public void onConfigurationCancelled() {
-
-                        // Exit EditFragment
-                        clearEditMenu();
-
-                    }
-
-                }.setNode(node));
-
-                // Display EditFragment in the bottom frame
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.activity_main_bottom_frame, mEditFragment, EditFragment.TAG)
-                        .commit();
-
-            }
-
-            private void clearEditMenu() {
-                if (mEditFragment != null) {
-
-                    // Remove EditFragment
-                    getSupportFragmentManager().beginTransaction().remove(mEditFragment).commit();
-
-                    // Clear any holds
-                    mButtonsFragment.clearHold();
-
-                }
-            }
-
-        };
+        mCurrentNode = mRootNode;
 
         // Todo setup system to set images
-        Drawable[] defaultImages = new Drawable[5];
-        for (int i = 0; i < 5; i++) {
-            defaultImages[i] = getResources().getDrawable(R.drawable.blue4);
-        }
+        DialinImage[] defaultImages = new DialinImage[5];
+        defaultImages[0] = new DialinImage(this, R.drawable.bblue);
+        defaultImages[1] = new DialinImage(this, R.drawable.bgreen);
+        defaultImages[2] = new DialinImage(this, R.drawable.bpurp);
+        defaultImages[3] = new DialinImage(this, R.drawable.bblue);
+        defaultImages[4] = new DialinImage(this, R.drawable.blaunch);
 
         // Todo setup system to set images
-        Drawable[] holdImages = new Drawable[5];
-        for (int i = 0; i < 5; i++) {
-            holdImages[i] = getResources().getDrawable(R.drawable.orange5);
+        DialinImage[] holdImages = new DialinImage[5];
+        for (int i = 0; i < 4; i++) {
+            holdImages[i] = new DialinImage(this, R.drawable.bpressed);
         }
+        holdImages[4] = new DialinImage(this, R.drawable.bpressedlaunch);
 
         // Generate and place ButtonsFragment in top frame
-        mButtonsFragment = ButtonsFragment.buildButtonsFragment(widgetButtonCount, mOnButtonsFragmentButtonClicked, defaultImages, holdImages);
+        mButtonsFragment = ButtonsFragment.buildButtonsFragment(widgetButtonCount, defaultImages, holdImages);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.activity_main_top_frame, mButtonsFragment, ButtonsFragment.TAG)
                 .commit();
@@ -194,11 +99,105 @@ public class MainActivity extends AppCompatActivity {
         return new Node();
     }
 
+    @Override
+    public void onButtonClicked(int index) {
+        mCurrentNode = mCurrentNode.getChild(index);
+        updateButtonsFragment();
+        clearEditMenu();
+    }
+
+    @Override
+    public void onButtonLongClicked(int index) {
+        showEditMenu(mCurrentNode.getChild(index));
+    }
+
+    @Override
+    public void onLaunchButtonClicked() {
+
+        mCurrentNode.getAction().execute();
+        mCurrentNode = mRootNode;
+        updateButtonsFragment();
+        clearEditMenu();
+
+    }
+
+    private void updateButtonsFragment() {
+
+        DialinImage[] currentImages = new DialinImage[widgetButtonCount];
+        for (int i = 0; i < widgetButtonCount - 1; i++) {
+
+            // Add child images
+            Node currentChild = mCurrentNode.getChild(i);
+            currentImages[i] = currentChild.getAction().actionImage;
+
+        }
+
+        // Add current images
+        currentImages[widgetButtonCount - 1] = mCurrentNode.getAction().actionImage;
+
+        // Update button fragment
+        mButtonsFragment.setIcons(currentImages);
+
+    }
+
+    private void showEditMenu(Node node) {
+
+        mNodeBeingEdited = node;
+
+        // Generate and setup the EditFragment
+        if (mNodeBeingEdited.hasAction()) {
+            mEditFragment = EditFragment.buildEditFragment(mNodeBeingEdited.getAction());
+        } else {
+            mEditFragment = EditFragment.buildEditFragment();
+        }
+
+        // Display EditFragment in the bottom frame
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.activity_main_bottom_frame, mEditFragment, EditFragment.TAG)
+                .commit();
+
+    }
+
+    private void clearEditMenu() {
+        if (mEditFragment != null) {
+
+            // Remove EditFragment
+            getSupportFragmentManager().beginTransaction().remove(mEditFragment).commit();
+
+            // Clear any holds
+            mButtonsFragment.clearHold();
+
+        }
+
+        mNodeBeingEdited = null;
+
+    }
+
     private void finishConfig() {
         Intent resultValue = new Intent();
         resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
         setResult(RESULT_OK, resultValue);
         finish();
+    }
+
+
+    @Override
+    public void onActionConfigured(Action action) {
+
+        // Once action has been setup through EditFragment, assign the new action to this node
+        mNodeBeingEdited.setAction(action);
+
+        // Exit EditFragment
+        clearEditMenu();
+
+    }
+
+    @Override
+    public void onConfigurationCancelled() {
+
+        // Exit EditFragment
+        clearEditMenu();
+
     }
 
 }

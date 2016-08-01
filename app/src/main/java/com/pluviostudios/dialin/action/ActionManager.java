@@ -7,4 +7,8 @@ public class ActionManager {
 
     public static final String TAG = "ActionManager";
 
+    public static Action getInstanceOfAction(int actionId) {
+        return null;
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.pluviostudios.dialin;
 
-import android.graphics.drawable.Drawable;
+import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,7 +16,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import com.pluviostudios.dialin.action.DialinImage;
-import com.pluviostudios.dialin.utilities.MissingExtraException;
+import com.pluviostudios.dialin.utilities.Utilities;
 
 /**
  * Created by spectre on 7/26/16.
@@ -23,36 +24,37 @@ import com.pluviostudios.dialin.utilities.MissingExtraException;
 public class ButtonsFragment extends Fragment implements View.OnClickListener, View.OnLongClickListener {
 
     public static final String TAG = "ButtonsFragment";
-    public static final String EXTRA_COUNT = "extra_count";
+    private static final String EXTRA_COUNT = "extra_count";
+    private static final String EXTRA_DEFAULT_IMAGE_LIST_URI = "extra_default_image_list_uri";
+    private static final String EXTRA_HOLD_IMAGE_LIST_URI = "extra_hold_image_list_uri";
 
     private LinearLayout mRoot;
     private ImageButton[] mButtons;
     private ImageButton mHoldButton;
     private int mLaunchButtonIndex;
 
-    protected Drawable[] defaultImageList; // How the buttons will look when not clicked. From left to right
-    protected Drawable[] clickedImageList; // How the buttons will look when clicked or held. From left to right
+    protected BitmapDrawable[] defaultImageList; // How the buttons will look when not clicked. From left to right
+    protected BitmapDrawable[] clickedImageList; // How the buttons will look when clicked or held. From left to right
     protected StateListDrawable[] mButtonStates; // The generated states of the button using the above images
 
     protected OnButtonsFragmentButtonClicked mOnButtonsFragmentButtonClicked;
 
-    //Todo Setup Default Image List
-    //Todo Should defaults be setup here? or should drawable files always be specified?
-    public static ButtonsFragment buildButtonsFragment(int count, OnButtonsFragmentButtonClicked onButtonsFragmentButtonClicked) {
+    public static ButtonsFragment buildButtonsFragment(int count, DialinImage[] defaultImageList, DialinImage[] clickedImageList) {
         ButtonsFragment fragment = new ButtonsFragment();
         Bundle extras = new Bundle();
         extras.putInt(EXTRA_COUNT, count);
+        extras.putStringArray(EXTRA_DEFAULT_IMAGE_LIST_URI, convertDialinImagesToStringArray(defaultImageList));
+        extras.putStringArray(EXTRA_HOLD_IMAGE_LIST_URI, convertDialinImagesToStringArray(clickedImageList));
         fragment.setArguments(extras);
-        fragment.mOnButtonsFragmentButtonClicked = onButtonsFragmentButtonClicked;
         return fragment;
     }
 
-    public static ButtonsFragment buildButtonsFragment(int count, OnButtonsFragmentButtonClicked onButtonsFragmentButtonClicked, Drawable[] defaultImageList, Drawable[] clickedImageList) {
-        ButtonsFragment fragment = buildButtonsFragment(count, onButtonsFragmentButtonClicked);
-        // Todo because we are setting clickedImageList without bundles, it will not be restored on hot-swap and will crash
-        fragment.defaultImageList = defaultImageList;
-        fragment.clickedImageList = clickedImageList;
-        return fragment;
+    private static String[] convertDialinImagesToStringArray(DialinImage[] dialinImages) {
+        String[] out = new String[dialinImages.length];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = dialinImages[i].imageUri.toString();
+        }
+        return out;
     }
 
     @Override
@@ -60,13 +62,22 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
         // To allow for an unlimited amount of buttons, this view must be made dynamically.
 
-        // If button count is not specified, throw exception
+        // Throw exceptions if we are missing expected extras
         Bundle extras = getArguments();
-        if (!extras.containsKey(EXTRA_COUNT))
-            throw new MissingExtraException(EXTRA_COUNT);
+        Utilities.checkBundleForExpectedExtras(extras,
+                EXTRA_COUNT,
+                EXTRA_DEFAULT_IMAGE_LIST_URI,
+                EXTRA_HOLD_IMAGE_LIST_URI);
 
+        // Set button count and determine launch index
         int buttonCount = extras.getInt(EXTRA_COUNT);
         mLaunchButtonIndex = buttonCount - 1;
+
+        // Convert passed URIs to BitmapDrawables
+        String[] defaultImageStringArray = extras.getStringArray(EXTRA_DEFAULT_IMAGE_LIST_URI);
+        String[] holdImageStringArray = extras.getStringArray(EXTRA_HOLD_IMAGE_LIST_URI);
+        defaultImageList = Utilities.generateBitmapDrawableArrayFromStringURI(getContext(), defaultImageStringArray);
+        clickedImageList = Utilities.generateBitmapDrawableArrayFromStringURI(getContext(), holdImageStringArray);
 
         // Create parent view
         mRoot = new LinearLayout(getContext());
@@ -107,6 +118,17 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
         }
 
         return mRoot;
+
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        if (!(context instanceof OnButtonsFragmentButtonClicked))
+            throw new RuntimeException("Parent activity should implement " + OnButtonsFragmentButtonClicked.class.getCanonicalName());
+
+        mOnButtonsFragmentButtonClicked = (OnButtonsFragmentButtonClicked) context;
 
     }
 

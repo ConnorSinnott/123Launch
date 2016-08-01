@@ -19,7 +19,7 @@
         android:layout_below="@id/fragment_edit_action_list_item"
         android:layout_marginLeft="3dp"
         android:layout_marginRight="3dp"
-        android:background="#5b5b5b">
+        android:background="#e0e0e0">
 
         <TextView
             android:layout_width="match_parent"
