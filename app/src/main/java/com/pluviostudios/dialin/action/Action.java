@@ -16,7 +16,7 @@ public abstract class Action {
     public String name;
     public int id;
     public DialinImage actionImage;
-    public ArrayList<String> actionArguements;
+    public ArrayList<String> actionArguments;
 
     public static final Action DefaultDialinAction = new DefaultAction();
 
@@ -39,9 +39,9 @@ public abstract class Action {
         }
     }
 
-    public void saveArguements() {
+    public void saveArguments() {
         if (hasConfigurationFragment()) {
-            actionArguements = getConfigurationFragment().getActionArguements();
+            actionArguments = getConfigurationFragment().getActionArguements();
         }
     }
 

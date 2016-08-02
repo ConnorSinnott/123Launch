@@ -4,9 +4,9 @@ import android.hardware.Camera;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
+import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
 import com.pluviostudios.dialin.action.DialinImage;
-import com.pluviostudios.dialin.utilities.ContextHelper;
 
 /**
  * Created by spectre on 7/31/16.
@@ -18,7 +18,7 @@ public class ActionToggleFlashlight extends Action {
     private static Camera sCamera;
 
     public ActionToggleFlashlight() {
-        super("Toggle Flashlight", 0, new DialinImage(ContextHelper.getContext(), R.drawable.flash));
+        super("Toggle Flashlight", 0, new DialinImage(ActionManager.getContext(), R.drawable.flash));
     }
 
     @Override

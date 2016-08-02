@@ -23,7 +23,7 @@ public class Node {
 
     public Node(Node parent) {
         this.parent = parent;
-        mChildren = new HashMap<>();
+        mChildren = new HashMap<Integer, Node>();
         mAction = Action.DefaultDialinAction;
     }
 
@@ -45,6 +45,10 @@ public class Node {
 
     }
 
+    public void setChild(int index, Node node) {
+        mChildren.put(index, node);
+    }
+
     public Action getAction() {
         return mAction;
     }
@@ -62,15 +66,15 @@ public class Node {
         mAction = dialinAction;
 
         Node currentNode = this;
-        do {
+        while (currentNode != null) {
             currentNode.isBlank = false;
             currentNode = currentNode.parent;
-        } while (currentNode != null);
+        }
 
     }
 
     public Integer[] getChildIndexes() {
-        return (Integer[]) mChildren.keySet().toArray();
+        return mChildren.keySet().toArray(new Integer[mChildren.keySet().size()]);
     }
 
 }
