@@ -6,6 +6,6 @@
                     android:resizeMode="horizontal"
                     android:updatePeriodMillis="0"
                     android:widgetCategory="home_screen"
-                    android:configure="com.pluviostudios.dialin.MainActivity"
+                    android:configure="com.pluviostudios.dialin.mainActivity.MainActivity"
     >
 </appwidget-provider>

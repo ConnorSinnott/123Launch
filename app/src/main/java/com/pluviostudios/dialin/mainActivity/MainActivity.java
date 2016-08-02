@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin;
+package com.pluviostudios.dialin.mainActivity;
 
 import android.appwidget.AppWidgetManager;
 import android.content.DialogInterface;
@@ -11,10 +11,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
+import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
+import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.action.DialinImage;
 import com.pluviostudios.dialin.data.Node;
-import com.pluviostudios.dialin.utilities.ContextHelper;
+import com.pluviostudios.dialin.data.StorageMananger;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -25,9 +27,9 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
     @BindView(R.id.main_save_button) Button buttonOk;
 
-    private int widgetId;
-    private int widgetButtonCount;
-    private boolean launchOnRight = true;
+    private int mWidgetId;
+    private int mWidgetButtonCount;
+    private boolean mLaunchOnRight = true;
 
     private Node mRootNode;
     private Node mCurrentNode = mRootNode;
@@ -38,30 +40,31 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        // ContextHelper is used globally and must be initialized first
-        ContextHelper.setContext(this);
+        // ActionManager is used globally and must be initialized first
+        ActionManager.initialize(this);
 
         // Find which widget started this activity
         if (getIntent().hasExtra(AppWidgetManager.EXTRA_APPWIDGET_ID)) {
 
-            //Get widgetId
-            widgetId = getIntent().getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
+            //Get mWidgetId (Will increment every time a widget is added to the home screen)
+            mWidgetId = getIntent().getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
 
             //Determine button count
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-            Bundle options = appWidgetManager.getAppWidgetOptions(widgetId);
+            Bundle options = appWidgetManager.getAppWidgetOptions(mWidgetId);
             int width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
-            widgetButtonCount = (width + 30) / 70; // Homescreen tile = n * 70 - 30
+            mWidgetButtonCount = (width + 30) / 70; // Homescreen tile = n * 70 - 30
 
         } else {
 
             // Non-developmental use should not get here. This is only a launcher for developmental purposes
-            widgetId = 0;
-            widgetButtonCount = 5;
+            mWidgetId = 0;
+            mWidgetButtonCount = 5;
 
         }
 
@@ -102,20 +105,24 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         holdImages[4] = new DialinImage(this, R.drawable.bpressedlaunch);
 
         // Generate and place ButtonsFragment in top frame
-        mButtonsFragment = ButtonsFragment.buildButtonsFragment(widgetButtonCount, defaultImages, holdImages);
+        mButtonsFragment = ButtonsFragment.buildButtonsFragment(mWidgetButtonCount, defaultImages, holdImages);
 
         // Extra Params
-        if (!launchOnRight)
+        if (!mLaunchOnRight)
             mButtonsFragment.getArguments().putBoolean(ButtonsFragment.EXTRA_LAUNCH_ON_LEFT, true);
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.activity_main_top_frame, mButtonsFragment, ButtonsFragment.TAG)
                 .commit();
 
+        if (!mCurrentNode.isBlank) {
+            updateButtonsFragment();
+        }
+
     }
 
-    private static Node loadRootNode() {
-        return new Node();
+    private Node loadRootNode() {
+        return StorageMananger.loadNodeTree(this, String.valueOf(mWidgetId));
     }
 
     @Override
@@ -140,8 +147,8 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
     private void updateButtonsFragment() {
 
-        DialinImage[] currentImages = new DialinImage[widgetButtonCount];
-        for (int i = 0; i < widgetButtonCount - 1; i++) {
+        DialinImage[] currentImages = new DialinImage[mWidgetButtonCount];
+        for (int i = 0; i < mWidgetButtonCount - 1; i++) {
 
             // Add child images
             Node currentChild = mCurrentNode.getChild(i);
@@ -150,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         }
 
         // Add current images
-        currentImages[widgetButtonCount - 1] = mCurrentNode.getAction().actionImage;
+        currentImages[mWidgetButtonCount - 1] = mCurrentNode.getAction().actionImage;
 
         // Update button fragment
         mButtonsFragment.setIcons(currentImages);
@@ -187,7 +194,6 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         }
 
         mNodeBeingEdited = null;
-
     }
 
     @Override
@@ -237,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
                     builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             // Set flag for launchOnLeft
-                            launchOnRight = !launchOnRight;
+                            mLaunchOnRight = !mLaunchOnRight;
                             // Rebuild
                             buildButtonsFragment();
                         }
@@ -250,7 +256,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
                     builder.setCancelable(true);
                     builder.create().show();
                 } else {
-                    launchOnRight = !launchOnRight; // Set flag for launchOnLeft
+                    mLaunchOnRight = !mLaunchOnRight; // Set flag for launchOnLeft
                     buildButtonsFragment(); // Rebuild
                 }
                 break;
@@ -260,10 +266,21 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
     // Call this when widget is ready
     private void finishConfig() {
+
+        StorageMananger.saveNodeTree(this, String.valueOf(mWidgetId), mWidgetButtonCount, mRootNode);
+
         Intent resultValue = new Intent();
-        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
-        setResult(RESULT_OK, resultValue);
+        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mWidgetId);
+
+        // If the user has not added anything, consider this a cancellation
+        if (!mRootNode.isBlank) {
+            setResult(RESULT_OK, resultValue);
+        } else {
+            setResult(RESULT_CANCELED, resultValue);
+        }
+
         finish();
+
     }
 
 }

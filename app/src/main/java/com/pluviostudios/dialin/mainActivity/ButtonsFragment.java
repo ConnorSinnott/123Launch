@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin;
+package com.pluviostudios.dialin.mainActivity;
 
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
@@ -34,6 +34,9 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
     private ImageButton[] mButtons;
     private ImageButton mHoldButton;
     private int mLaunchButtonIndex;
+
+    DialinImage[] pendingIconList;
+    private boolean iconsPending = false;
 
     protected BitmapDrawable[] defaultImageList; // How the buttons will look when not clicked. From left to right
     protected BitmapDrawable[] clickedImageList; // How the buttons will look when clicked or held. From left to right
@@ -125,6 +128,11 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
         }
 
+        if (iconsPending) {
+            iconsPending = false;
+            setIcons(pendingIconList);
+        }
+
         return mRoot;
 
     }
@@ -142,19 +150,30 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
     public void setIcons(DialinImage[] iconList) {
 
-        if (iconList.length != mButtons.length)
-            throw new RuntimeException("Passed iconList length does not match button count");
+        // If the fragment is visible, update the button images
+        if (isAdded()) {
 
-        for (int i = 0; i < mButtons.length; i++) {
+            if (iconList.length != mButtons.length)
+                throw new RuntimeException("Passed iconList length does not match button count");
 
-            ImageButton currentButton = mButtons[i];
-            Uri imageUri = iconList[i].imageUri;
+            for (int i = 0; i < mButtons.length; i++) {
 
-            // Apply new image to button
-            currentButton.setImageURI(imageUri);
+                ImageButton currentButton = mButtons[i];
+                Uri imageUri = iconList[i].imageUri;
 
-            // Invalidate button
-            currentButton.requestLayout();
+                // Apply new image to button
+                currentButton.setImageURI(imageUri);
+
+                // Invalidate button
+                currentButton.requestLayout();
+
+            }
+
+        } else {
+
+            //Otherwise, store the images and update the buttons as soon as the fragment is attached
+            iconsPending = true;
+            pendingIconList = iconList;
 
         }
 

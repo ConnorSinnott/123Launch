@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin;
+package com.pluviostudios.dialin.mainActivity;
 
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.DialinImage;
 import com.pluviostudios.dialin.utilities.Utilities;
 

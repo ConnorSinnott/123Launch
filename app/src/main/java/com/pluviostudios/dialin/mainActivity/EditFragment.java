@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin;
+package com.pluviostudios.dialin.mainActivity;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -14,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
+import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
 import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
@@ -56,7 +57,7 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
         EditFragment editFragment = buildEditFragment();
 
         int actionId = action.id;
-        ArrayList<String> actionArguments = action.actionArguements;
+        ArrayList<String> actionArguments = action.actionArguments;
 
         Bundle extras = new Bundle();
         extras.putInt(EXTRA_ACTION_ID, actionId);
@@ -86,7 +87,7 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
 
             // Restore action
             mAction = ActionManager.getInstanceOfAction(actionId);
-            mAction.actionArguements = actionArguments;
+            mAction.actionArguments = actionArguments;
 
             if (mAction.hasConfigurationFragment()) {
 
@@ -145,7 +146,7 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
                 // If the currentAction has been changed from the default action with id -1
                 if (mAction.id >= 0) {
 
-                    mAction.saveArguements();
+                    mAction.saveArguments();
 
                     // On OK return the configured fragment using OnActionConfigured
                     if (mOnActionConfigured != null) {
@@ -176,7 +177,7 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
 
                 ArrayList<Pair<String, DialinImage>> list = new ArrayList<>();
 
-                for (Action x : ActionManager.actions) {
+                for (Action x : ActionManager.getActions()) {
                     list.add(new Pair<>(x.name, x.actionImage));
                 }
                 ListDialogFragment listDialogFragment = ListDialogFragment.buildListDialogFragment(list);
