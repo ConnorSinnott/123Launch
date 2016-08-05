@@ -20,18 +20,19 @@ public class DBContentProvider extends ContentProvider {
     private DBHelper mOpenHelper;
 
     static final int CONFIG = 100;
-    static final int CONFIG_WITH_BUTTON_COUNT = 101;
-
     static final int WIDGET = 200;
-    static final int WIDGET_WITH_CONFIG = 201;
 
     private static final SQLiteQueryBuilder sWidgetByConfigQueryBuilder;
+    public static final String QUERY_INNER_JOIN = "innerJoin";
+    public static final String WIDGET_ID = "queryID";
+    public static final String CONFIG_ID = "configId";
+    public static final String QUERY_BUTTON_COUNT = "buttonCount";
 
     static {
         sWidgetByConfigQueryBuilder = new SQLiteQueryBuilder();
         sWidgetByConfigQueryBuilder.setTables(
                 DBContract.ConfigEntry.TABLE_NAME + " INNER JOIN " +
-                        DBContract.ConfigEntry.TABLE_NAME +
+                        DBContract.WidgetsEntry.TABLE_NAME +
                         " ON " + DBContract.WidgetsEntry.TABLE_NAME +
                         "." + DBContract.WidgetsEntry.CONFIG_KEY_COL +
                         " = " + DBContract.ConfigEntry.TABLE_NAME +
@@ -45,10 +46,7 @@ public class DBContentProvider extends ContentProvider {
         final String authority = DBContract.CONTENT_AUTHORITY;
 
         matcher.addURI(authority, DBContract.PATH_CONFIG, CONFIG);
-        matcher.addURI(authority, DBContract.PATH_CONFIG + "/#", CONFIG_WITH_BUTTON_COUNT);
-
         matcher.addURI(authority, DBContract.PATH_WIDGETS, WIDGET);
-        matcher.addURI(authority, DBContract.PATH_WIDGETS + "/#", WIDGET_WITH_CONFIG);
 
         return matcher;
 
@@ -70,8 +68,6 @@ public class DBContentProvider extends ContentProvider {
                 return DBContract.ConfigEntry.CONTENT_TYPE;
             case WIDGET:
                 return DBContract.WidgetsEntry.CONTENT_TYPE;
-            case WIDGET_WITH_CONFIG:
-                return DBContract.WidgetsEntry.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -84,6 +80,27 @@ public class DBContentProvider extends ContentProvider {
         Cursor retCursor;
         switch (sUriMatcher.match(uri)) {
             case CONFIG: {
+
+                if (uri.getQueryParameter(CONFIG_ID) != null) {
+
+                    selection = createSelection(selection,
+                            DBContract.ConfigEntry.TABLE_NAME + "." + DBContract.ConfigEntry._ID + " = ?");
+
+                    selectionArgs = createSelectionArgs(selectionArgs,
+                            uri.getQueryParameter(CONFIG_ID));
+
+                }
+
+                if (uri.getQueryParameter(QUERY_BUTTON_COUNT) != null) {
+
+                    selection = createSelection(selection,
+                            DBContract.ConfigEntry.TABLE_NAME + "." + DBContract.ConfigEntry.BUTTON_COUNT_COL + " = ?");
+
+                    selectionArgs = createSelectionArgs(selectionArgs,
+                            uri.getQueryParameter(QUERY_BUTTON_COUNT));
+
+                }
+
                 retCursor = mOpenHelper.getReadableDatabase().query(
                         DBContract.ConfigEntry.TABLE_NAME,
                         projection,
@@ -93,64 +110,73 @@ public class DBContentProvider extends ContentProvider {
                         null,
                         sortOrder
                 );
-                break;
-            }
-            case CONFIG_WITH_BUTTON_COUNT: {
-
-                int buttonCount = DBContract.ConfigEntry.getButtonCountFromUri(uri);
-
-                selection = createSelection(selection,
-                        DBContract.ConfigEntry.TABLE_NAME + "." + DBContract.ConfigEntry.BUTTON_COUNT_COL + " = ?");
-
-                selectionArgs = createSelectionArgs(selectionArgs,
-                        String.valueOf(buttonCount));
-
-                retCursor = mOpenHelper.getReadableDatabase().query(
-                        DBContract.ConfigEntry.TABLE_NAME,
-                        projection,
-                        selection,
-                        selectionArgs,
-                        null,
-                        null,
-                        sortOrder
-                );
-
                 break;
             }
             case WIDGET: {
-                retCursor = mOpenHelper.getReadableDatabase().query(
-                        DBContract.WidgetsEntry.TABLE_NAME,
-                        projection,
-                        selection,
-                        selectionArgs,
-                        null,
-                        null,
-                        sortOrder
-                );
+
+                if (uri.getQueryParameter(WIDGET_ID) != null) {
+
+                    selection = createSelection(selection,
+                            DBContract.WidgetsEntry.TABLE_NAME + "." + DBContract.WidgetsEntry._ID + " = ?");
+
+                    selectionArgs = createSelectionArgs(selectionArgs,
+                            uri.getQueryParameter(WIDGET_ID));
+
+                }
+
+                if (uri.getQueryParameter(CONFIG_ID) != null) {
+
+                    if (uri.getQueryParameter(QUERY_INNER_JOIN) != null && Boolean.valueOf(uri.getQueryParameter(QUERY_INNER_JOIN))) {
+
+                        selection = createSelection(selection,
+                                DBContract.ConfigEntry.TABLE_NAME + "." + DBContract.ConfigEntry._ID + " = ?");
+
+                        selectionArgs = createSelectionArgs(selectionArgs,
+                                uri.getQueryParameter(CONFIG_ID));
+
+                    } else {
+
+                        selection = createSelection(selection,
+                                DBContract.WidgetsEntry.TABLE_NAME + "." + DBContract.WidgetsEntry.CONFIG_KEY_COL + " = ?");
+
+                        selectionArgs = createSelectionArgs(selectionArgs,
+                                uri.getQueryParameter(CONFIG_ID));
+
+                    }
+
+                }
+
+                if (uri.getQueryParameter(QUERY_INNER_JOIN) != null && Boolean.valueOf(uri.getQueryParameter(QUERY_INNER_JOIN))) {
+
+                    retCursor = sWidgetByConfigQueryBuilder.query(
+                            mOpenHelper.getReadableDatabase(),
+                            projection,
+                            selection,
+                            selectionArgs,
+                            null,
+                            null,
+                            sortOrder
+                    );
+
+                } else {
+
+                    retCursor = mOpenHelper.getReadableDatabase().query(
+                            DBContract.WidgetsEntry.TABLE_NAME,
+                            projection,
+                            selection,
+                            selectionArgs,
+                            null,
+                            null,
+                            sortOrder
+                    );
+
+                }
                 break;
             }
-            case WIDGET_WITH_CONFIG: {
 
-                long configID = DBContract.WidgetsEntry.getConfigIdFromUri(uri);
-
-                selection = createSelection(selection,
-                        DBContract.ConfigEntry.TABLE_NAME + "." + DBContract.ConfigEntry._ID + " = ?");
-
-                selectionArgs = createSelectionArgs(selectionArgs,
-                        String.valueOf(configID));
-
-                retCursor = sWidgetByConfigQueryBuilder.query(mOpenHelper.getReadableDatabase(),
-                        projection,
-                        selection,
-                        selectionArgs,
-                        null,
-                        null,
-                        sortOrder
-                );
-                break;
-            }
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
+
         }
 
         retCursor.setNotificationUri(getContext().getContentResolver(), uri);
@@ -199,11 +225,33 @@ public class DBContentProvider extends ContentProvider {
         if (null == selection) selection = "1";
         switch (match) {
             case CONFIG: {
+
+                if (uri.getQueryParameter(CONFIG_ID) != null) {
+
+                    selection = createSelection(selection,
+                            DBContract.ConfigEntry.TABLE_NAME + "." + DBContract.ConfigEntry._ID + " = ?");
+
+                    selectionArgs = createSelectionArgs(selectionArgs,
+                            uri.getQueryParameter(CONFIG_ID));
+
+                }
+
                 rowsDeleted = db.delete(
                         DBContract.ConfigEntry.TABLE_NAME, selection, selectionArgs);
                 break;
             }
             case WIDGET: {
+
+                if (uri.getQueryParameter(WIDGET_ID) != null) {
+
+                    selection = createSelection(selection,
+                            DBContract.WidgetsEntry.TABLE_NAME + "." + DBContract.WidgetsEntry._ID + " = ?");
+
+                    selectionArgs = createSelectionArgs(selectionArgs,
+                            uri.getQueryParameter(WIDGET_ID));
+
+                }
+
                 rowsDeleted = db.delete(
                         DBContract.WidgetsEntry.TABLE_NAME, selection, selectionArgs);
                 break;
@@ -227,10 +275,32 @@ public class DBContentProvider extends ContentProvider {
 
         switch (match) {
             case CONFIG: {
+
+                if (uri.getQueryParameter(CONFIG_ID) != null) {
+
+                    selection = createSelection(selection,
+                            DBContract.ConfigEntry.TABLE_NAME + "." + DBContract.ConfigEntry._ID + " = ?");
+
+                    selectionArgs = createSelectionArgs(selectionArgs,
+                            uri.getQueryParameter(CONFIG_ID));
+
+                }
+
                 rowsUpdated = db.update(DBContract.ConfigEntry.TABLE_NAME, values, selection, selectionArgs);
                 break;
             }
             case WIDGET: {
+
+                if (uri.getQueryParameter(WIDGET_ID) != null) {
+
+                    selection = createSelection(selection,
+                            DBContract.WidgetsEntry.TABLE_NAME + "." + DBContract.WidgetsEntry._ID + " = ?");
+
+                    selectionArgs = createSelectionArgs(selectionArgs,
+                            uri.getQueryParameter(WIDGET_ID));
+
+                }
+
                 rowsUpdated = db.update(
                         DBContract.WidgetsEntry.TABLE_NAME,
                         values,

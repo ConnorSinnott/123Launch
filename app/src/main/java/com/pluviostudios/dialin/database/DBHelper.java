@@ -23,15 +23,16 @@ public class DBHelper extends SQLiteOpenHelper {
 
         final String CreateConfigTable = "CREATE TABLE " + DBContract.ConfigEntry.TABLE_NAME + " ("
                 + DBContract.ConfigEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + DBContract.ConfigEntry.FILENAME_COL + " TEXT NOT NULL,"
-                + DBContract.ConfigEntry.BUTTON_COUNT_COL + " TEXT NOT NULL,"
-                + DBContract.ConfigEntry.DATE_CREATED_COL + " LONG NOT NULL,"
-                + " UNIQUE (" + DBContract.ConfigEntry.FILENAME_COL + ") ON CONFLICT REPLACE)";
+                + DBContract.ConfigEntry.TITLE_COL + " TEXT NOT NULL,"
+                + DBContract.ConfigEntry.BUTTON_COUNT_COL + " INTEGER NOT NULL,"
+                + DBContract.ConfigEntry.LAUNCH_BUTTON_INDEX + " INTEGER NOT NULL, "
+                + DBContract.ConfigEntry.DATE_MODIFIED + " LONG NOT NULL)";
 
         final String CreateWidgetTable = "CREATE TABLE " + DBContract.WidgetsEntry.TABLE_NAME + " ("
                 + DBContract.WidgetsEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + DBContract.WidgetsEntry.WIDGET_ID_COL + " INTEGER NOT NULL,"
                 + DBContract.WidgetsEntry.CONFIG_KEY_COL + " LONG NOT NULL,"
+                + DBContract.WidgetsEntry.WIDGET_CURRENT_PATH_COL + "STRING NOT NULL, "
                 + " FOREIGN KEY (" + DBContract.WidgetsEntry.CONFIG_KEY_COL + ") REFERENCES "
                 + DBContract.ConfigEntry.TABLE_NAME + " (" + DBContract.ConfigEntry._ID + ")"
                 + " UNIQUE (" + DBContract.WidgetsEntry.WIDGET_ID_COL + ") ON CONFLICT REPLACE)";

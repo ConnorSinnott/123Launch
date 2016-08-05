@@ -15,7 +15,6 @@ import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
 import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.action.DialinImage;
-import com.pluviostudios.dialin.data.JSONNodeConverter;
 import com.pluviostudios.dialin.data.Node;
 import com.pluviostudios.dialin.data.StorageManager;
 import com.pluviostudios.dialin.utilities.Utilities;
@@ -31,15 +30,15 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     public static final String EXTRA_CONFIG_ID = "extra_config_id";
     public static final String EXTRA_CONFIG_TITLE = "extra_config_title";
     public static final String EXTRA_BUTTON_COUNT = "extra_button_count";
-    public static final String EXTRA_NEW_CONFIG = "extra_new_config";
 
     @BindView(R.id.main_save_button) Button buttonOk;
 
     private long mConfigID;
     private String mConfigTitle;
     private int mWidgetButtonCount;
-    private boolean mLaunchOnLeft;
     private boolean mNewConfig;
+    private boolean mLaunchOnLeft;
+    private int launchButtonIndex;
 
     private Node mRootNode;
     private Node mCurrentNode = mRootNode;
@@ -55,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         return startIntent;
     }
 
-    public static Intent buildMainActivityForNewConfiguration(Context context, String configTitle, long configId, int buttonCount) {
+    public static Intent buildMainActivity(Context context, String configTitle, long configId, int buttonCount) {
         Intent startIntent = new Intent(context, MainActivity.class);
         startIntent.putExtra(EXTRA_CONFIG_ID, configId);
         startIntent.putExtra(EXTRA_CONFIG_TITLE, configTitle);
@@ -78,14 +77,20 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
         // Throw exceptions if we are missing expected extras
         Utilities.checkBundleForExpectedExtras(extras,
-                EXTRA_CONFIG_ID,
                 EXTRA_CONFIG_TITLE,
                 EXTRA_BUTTON_COUNT);
 
-        mConfigID = extras.getLong(EXTRA_CONFIG_ID);
         mConfigTitle = extras.getString(EXTRA_CONFIG_TITLE);
         mWidgetButtonCount = extras.getInt(EXTRA_BUTTON_COUNT);
+        launchButtonIndex = mLaunchOnLeft ? 0 : mWidgetButtonCount - 1;
 
+        // Check to see if this is a new configuration
+        mNewConfig = !extras.containsKey(EXTRA_CONFIG_ID);
+        if (!mNewConfig) {
+            mConfigID = extras.getLong(EXTRA_CONFIG_ID);
+        }
+
+        // Set the title
         setTitle(mConfigTitle);
 
         // Build buttons fragment
@@ -104,47 +109,42 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     private void buildButtonsFragment() {
 
         // Load the rootNode from file using mConfigId
-        mRootNode = StorageManager.loadNode(MainActivity.this, mConfigID);
+        if (mNewConfig) {
+            mRootNode = new Node();
+        } else {
+            mRootNode = StorageManager.loadNode(MainActivity.this, mConfigID);
+        }
 
-        // If the root node is blank it means that this is a new configuration
-        mNewConfig = mRootNode.isBlank;
-
+        // Set current node to root
         mCurrentNode = mRootNode;
+
+        // Clear edit menu if it is open
+        // Todo might not be needed
         clearEditMenu();
 
-        // Todo setup system to set images
-        // Todo system should include reversing
-        DialinImage[] defaultImages = new DialinImage[5];
-        defaultImages[0] = new DialinImage(this, R.drawable.bblue);
-        defaultImages[1] = new DialinImage(this, R.drawable.bgreen);
-        defaultImages[2] = new DialinImage(this, R.drawable.bpurp);
-        defaultImages[3] = new DialinImage(this, R.drawable.bblue);
-        defaultImages[4] = new DialinImage(this, R.drawable.blaunch);
-
-        // Todo setup system to set images
-        DialinImage[] holdImages = new DialinImage[5];
-        for (int i = 0; i < 4; i++) {
-            holdImages[i] = new DialinImage(this, R.drawable.bpressed);
-        }
-        holdImages[4] = new DialinImage(this, R.drawable.bpressedlaunch);
+        // Get the current button icon set
+        ButtonIconSet buttonIconSet = getButtonIconSet();
 
         // Generate and place ButtonsFragment in top frame
-        mButtonsFragment = ButtonsFragment.buildButtonsFragment(mWidgetButtonCount, defaultImages, holdImages);
-
-        // Extra Params
-        if (mLaunchOnLeft)
-            mButtonsFragment.getArguments().putBoolean(ButtonsFragment.EXTRA_LAUNCH_ON_LEFT, true);
+        mButtonsFragment = ButtonsFragment.buildButtonsFragment(mWidgetButtonCount, buttonIconSet);
+        mButtonsFragment.getArguments().putBoolean(ButtonsFragment.EXTRA_LAUNCH_ON_LEFT, mLaunchOnLeft);
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.activity_main_top_frame, mButtonsFragment, ButtonsFragment.TAG)
                 .commit();
 
+        // If the current node has any children, we have to call updateButtonsFragment to display them
         if (!mCurrentNode.isBlank) {
             updateButtonsFragment();
         }
 
     }
 
+    private ButtonIconSet getButtonIconSet() {
+        return null;
+    }
+
+    // Called when one of the buttonFragment's buttons are clicked
     @Override
     public void onButtonClicked(int index) {
         mCurrentNode = mCurrentNode.getChild(index);
@@ -152,20 +152,33 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         clearEditMenu();
     }
 
+    // Called when one of the buttonFragment's buttons are long clicked
     @Override
     public void onButtonLongClicked(int index) {
         showEditMenu(mCurrentNode.getChild(index));
     }
 
+    // Called when buttonFragment's launch button is clicked
     @Override
     public void onLaunchButtonClicked() {
+
+        // Execute the action
         mCurrentNode.getAction().execute();
+
+        // Set current node back to rootNode
         mCurrentNode = mRootNode;
+
+        // Update buttons fragment to display changes
         updateButtonsFragment();
+
+        // Clear edit menu if open
         clearEditMenu();
+
     }
 
     private void updateButtonsFragment() {
+
+        // Todo This system does not support LaunchOnLeft
 
         DialinImage[] currentImages = new DialinImage[mWidgetButtonCount];
         for (int i = 0; i < mWidgetButtonCount - 1; i++) {
@@ -176,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
         }
 
-        // Add current images
+        // Add current (Launch button) image
         currentImages[mWidgetButtonCount - 1] = mCurrentNode.getAction().actionImage;
 
         // Update button fragment
@@ -190,9 +203,15 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
         // Generate and setup the EditFragment
         if (mNodeBeingEdited.hasAction()) {
+
+            // If the node currently has an action, pass it as a parameter
             mEditFragment = EditFragment.buildEditFragment(mNodeBeingEdited.getAction());
+
         } else {
+
+            // Otherwise, don't pass anything and EditFragment will create one
             mEditFragment = EditFragment.buildEditFragment();
+
         }
 
         // Display EditFragment in the bottom frame
@@ -254,7 +273,6 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_main_switch_launch_side:
-
                 // If the user has made progress, alert the user that progress will be lost
                 if (!mRootNode.isBlank) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -288,16 +306,15 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     private void finishButtonConfiguration() {
 
         if (!mRootNode.isBlank) {
-            StorageManager.saveConfiguration(this, mConfigID, mConfigTitle, mRootNode);
-            JSONNodeConverter.convertNodeToJSON();
-
+            Bundle saveResult;
+            if (mNewConfig) {
+                saveResult = StorageManager.saveNewConfiguration(this, mConfigTitle, mWidgetButtonCount, launchButtonIndex, mRootNode);
+            } else {
+                saveResult = StorageManager.saveConfiguration(this, mConfigID, mConfigTitle, mRootNode);
+            }
             Intent data = new Intent();
-            data.putExtra(EXTRA_CONFIG_ID, mConfigID);
-            data.putExtra(EXTRA_NEW_CONFIG, mNewConfig);
-            data.putExtra(EXTRA_CONFIG_TITLE, mConfigTitle);
-            data.putExtra(EXTRA_BUTTON_COUNT, mWidgetButtonCount);
+            data.putExtras(saveResult);
             setResult(RESULT_OK, data);
-
         } else {
             setResult(RESULT_CANCELED);
         }

@@ -23,7 +23,7 @@ public class Utilities {
         }
     }
 
-    public static BitmapDrawable[] generateBitmapDrawableArrayFromStringURI(Context context, String[] uris) {
+    public static BitmapDrawable[] generateBitmapDrawableArrayFromStringURIs(Context context, String[] uris) {
 
         BitmapDrawable[] out = new BitmapDrawable[uris.length];
 

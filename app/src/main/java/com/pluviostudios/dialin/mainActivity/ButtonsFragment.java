@@ -1,8 +1,6 @@
 package com.pluviostudios.dialin.mainActivity;
 
 import android.content.Context;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -25,54 +23,99 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
     public static final String TAG = "ButtonsFragment";
     private static final String EXTRA_COUNT = "extra_count";
-    private static final String EXTRA_DEFAULT_IMAGE_LIST_URI = "extra_default_image_list_uri";
-    private static final String EXTRA_HOLD_IMAGE_LIST_URI = "extra_hold_image_list_uri";
+    private static final String EXTRA_BUTTON_SET = "extra_button_set";
+    public static final String EXTRA_LAUNCH_ON_LEFT = "extra_launch_on_left";
 
-    public static final String EXTRA_LAUNCH_ON_LEFT = "extra_launch_on_right";
+    private static final String ID_BUTTON = "button_fragment_button";
 
     private LinearLayout mRoot;
+    protected ButtonIconSet mButtonIconSet;
     private ImageButton[] mButtons;
-    private ImageButton mHoldButton;
     private int mLaunchButtonIndex;
 
-    DialinImage[] pendingIconList;
+    private DialinImage[] pendingIconList;
     private boolean iconsPending = false;
-
-    protected BitmapDrawable[] defaultImageList; // How the buttons will look when not clicked. From left to right
-    protected BitmapDrawable[] clickedImageList; // How the buttons will look when clicked or held. From left to right
-    protected StateListDrawable[] mButtonStates; // The generated states of the button using the above images
 
     protected OnButtonsFragmentButtonClicked mOnButtonsFragmentButtonClicked;
 
-    public static ButtonsFragment buildButtonsFragment(int count, DialinImage[] defaultImageList, DialinImage[] clickedImageList) {
+    public static ButtonsFragment buildButtonsFragment(int count, ButtonIconSet buttonIconSet) {
         ButtonsFragment fragment = new ButtonsFragment();
         Bundle extras = new Bundle();
         extras.putInt(EXTRA_COUNT, count);
-        extras.putStringArray(EXTRA_DEFAULT_IMAGE_LIST_URI, convertDialinImagesToStringArray(defaultImageList));
-        extras.putStringArray(EXTRA_HOLD_IMAGE_LIST_URI, convertDialinImagesToStringArray(clickedImageList));
+        extras.putSerializable(EXTRA_BUTTON_SET, buttonIconSet);
         fragment.setArguments(extras);
         return fragment;
     }
 
-    private static String[] convertDialinImagesToStringArray(DialinImage[] dialinImages) {
-        String[] out = new String[dialinImages.length];
-        for (int i = 0; i < out.length; i++) {
-            out[i] = dialinImages[i].imageUri.toString();
+    public static String generateButtonTag(int buttonIndex) {
+        return ID_BUTTON + "_" + buttonIndex;
+    }
+
+    public static int getIndexFromButtonTag(String buttonTag) {
+        return Integer.parseInt(buttonTag.substring(buttonTag.length() - 1, buttonTag.length()));
+    }
+
+    // To allow for an unlimited amount of buttons, this view must be made dynamically.
+    public static LinearLayout generateButtons(Context context, int buttonCount, boolean launchOnLeft, ButtonIconSet buttonSet) {
+
+        // Create parent view
+        LinearLayout buttonsView = new LinearLayout(context);
+        buttonsView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        buttonsView.setOrientation(LinearLayout.HORIZONTAL);
+        buttonsView.setGravity(Gravity.CENTER);
+
+        // Determine Button Size
+        // Todo find a better way to determine button width
+        int buttonSize = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 70, context.getResources().getDisplayMetrics()));
+
+        int startingIndex = 0;
+        if (launchOnLeft) {
+            startingIndex = 1;
         }
-        return out;
+
+        // Add buttons to parent view
+        for (int i = startingIndex; i < buttonCount - (launchOnLeft ? 0 : 1); i++) {
+
+            ImageButton newImageButton = new ImageButton(context);
+            newImageButton.setLayoutParams(new ViewGroup.LayoutParams(buttonSize, buttonSize));
+
+            // Set tag to identify button later
+            newImageButton.setTag(generateButtonTag(i));
+
+            // Set button background to default image
+            newImageButton.setBackground(buttonSet.getButtonIcon(i));
+
+            buttonsView.addView(newImageButton);
+
+        }
+
+        // Add launch button to the parent view and set its unique icon
+        ImageButton launchImageButton = new ImageButton(context);
+        launchImageButton.setLayoutParams(new ViewGroup.LayoutParams(buttonSize, buttonSize));
+        launchImageButton.setBackground(buttonSet.getLauncherIcon());
+
+        // If launchOnLeft, place the launch button at index 0, otherwise, add it normally
+        // Set the identifying tag accordingly. We can identify which is the launcher with mLauncherIndex
+        if (launchOnLeft) {
+            launchImageButton.setTag(generateButtonTag(0));
+            buttonsView.addView(launchImageButton, 0);
+        } else {
+            launchImageButton.setTag(generateButtonTag(buttonCount - 1));
+            buttonsView.addView(launchImageButton);
+        }
+
+        return buttonsView;
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        // To allow for an unlimited amount of buttons, this view must be made dynamically.
-
         // Throw exceptions if we are missing expected extras
         Bundle extras = getArguments();
         Utilities.checkBundleForExpectedExtras(extras,
                 EXTRA_COUNT,
-                EXTRA_DEFAULT_IMAGE_LIST_URI,
-                EXTRA_HOLD_IMAGE_LIST_URI);
+                EXTRA_BUTTON_SET);
 
         // Set button count and determine launch index
         int buttonCount = extras.getInt(EXTRA_COUNT);
@@ -84,50 +127,22 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
             mLaunchButtonIndex = buttonCount - 1;
         }
 
-        // Convert passed URIs to BitmapDrawables
-        String[] defaultImageStringArray = extras.getStringArray(EXTRA_DEFAULT_IMAGE_LIST_URI);
-        String[] holdImageStringArray = extras.getStringArray(EXTRA_HOLD_IMAGE_LIST_URI);
-        defaultImageList = Utilities.generateBitmapDrawableArrayFromStringURI(getContext(), defaultImageStringArray);
-        clickedImageList = Utilities.generateBitmapDrawableArrayFromStringURI(getContext(), holdImageStringArray);
+        // Get the passed ButtonIconSet
+        ButtonIconSet buttonIconSet = (ButtonIconSet) extras.getSerializable(EXTRA_BUTTON_SET);
 
-        // Create parent view
-        mRoot = new LinearLayout(getContext());
-        mRoot.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        mRoot.setOrientation(LinearLayout.HORIZONTAL);
-        mRoot.setGravity(Gravity.CENTER);
+        // Generate the button view
+        mRoot = generateButtons(getContext(), buttonCount, false, buttonIconSet);
 
-        // Determine Button Size
-        // Todo find a better way to determine button width
-        int buttonSize = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 70, getContext().getResources().getDisplayMetrics()));
-
-        // Add buttons to parent view
+        // The views exist but have no functionality. Find the buttons via tags and add listeners
         mButtons = new ImageButton[buttonCount];
-        mButtonStates = new StateListDrawable[buttonCount];
         for (int i = 0; i < buttonCount; i++) {
-
-            ImageButton newImageButton = new ImageButton(getContext());
-            newImageButton.setLayoutParams(new ViewGroup.LayoutParams(buttonSize, buttonSize));
-
-            // Set tag to identify button later
-            newImageButton.setTag(i);
-
-            // Add listeners
-            newImageButton.setOnClickListener(this);
-            newImageButton.setOnLongClickListener(this);
-
-            // Generate button states
-            mButtonStates[i] = new StateListDrawable();
-            mButtonStates[i].addState(new int[]{android.R.attr.state_pressed}, clickedImageList[i]); // Clicked
-            mButtonStates[i].addState(new int[]{android.R.attr.state_enabled}, defaultImageList[i]); // Released
-
-            // Set button background to default image
-            newImageButton.setBackground(mButtonStates[i]);
-
-            mButtons[i] = newImageButton;
-            mRoot.addView(newImageButton);
-
+            ImageButton imageButton = (ImageButton) mRoot.findViewWithTag(generateButtonTag(i));
+            mButtons[i] = imageButton;
+            imageButton.setOnClickListener(this);
+            imageButton.setOnLongClickListener(this);
         }
 
+        // If there are cached icons waiting to be displayed, display them
         if (iconsPending) {
             iconsPending = false;
             setIcons(pendingIconList);
@@ -183,7 +198,7 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
     public void onClick(View view) {
 
         // Which button was clicked
-        int buttonIndex = (int) view.getTag();
+        int buttonIndex = getIndexFromButtonTag((String) view.getTag());
 
         if (mOnButtonsFragmentButtonClicked != null) {
 
@@ -209,7 +224,7 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
     public boolean onLongClick(View view) {
 
         // Which button was clicked
-        int buttonIndex = (int) view.getTag();
+        int buttonIndex = getIndexFromButtonTag((String) view.getTag());
 
         if (mOnButtonsFragmentButtonClicked != null) {
 
@@ -237,21 +252,20 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
     public void setHoldOnButton(int index) {
 
         // Set hold image
-        if (mHoldButton != null)
-            clearHold();
+//        if (mHoldButton != null)
+//            clearHold();
 
-        mHoldButton = mButtons[index];
-        mHoldButton.setBackground(clickedImageList[index]);
+//        mHoldButton = mButtons[index];
+//        mHoldButton.setPressed(true);
 
     }
 
     public void clearHold() {
 
         // Reset hold image
-        if (mHoldButton != null) {
-            int holdIndex = (int) mHoldButton.getTag();
-            mHoldButton.setBackground(mButtonStates[holdIndex]);
-        }
+//        if (mHoldButton != null) {
+//            mHoldButton.setPressed(false);
+//        }
 
     }
 

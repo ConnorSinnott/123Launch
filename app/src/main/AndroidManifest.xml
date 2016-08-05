@@ -23,14 +23,14 @@
         </activity>
 
         <provider
-            android:name=".action.database.DBContentProvider"
+            android:name=".database.DBContentProvider"
             android:authorities="com.pluviostudios.dialin.app"
             android:exported="false"
             android:syncable="true"/>
 
         <!-- 1x4 Widget -->
         <receiver
-            android:name=".widget.Widget4x1Provider"
+            android:name=".widget.BaseWidgetProvider$Widget4x1Provider"
             >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
@@ -42,7 +42,7 @@
 
         <!-- 1x5 Widget -->
         <receiver
-            android:name=".widget.Widget5x1Provider"
+            android:name=".widget.BaseWidgetProvider$Widget5x1Provider"
             >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
@@ -52,6 +52,14 @@
                 android:resource="@xml/widget_5x1_info"/>
         </receiver>
 
+        <receiver
+            android:name=".widget.WidgetReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="123GoIntent"/>
+                <!--<action android:name="android.intent.action.MAIN"/>-->
+            </intent-filter>
+        </receiver>
 
     </application>
 

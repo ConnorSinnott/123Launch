@@ -2,16 +2,36 @@
 
 <android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
 
-    <ListView
-        android:id="@+id/activity_list_listview"
+
+    <FrameLayout
+        android:id="@+id/activity_list_frame"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        />
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/activity_list_no_configurations"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="No Configurations!"
+            android:visibility="gone"/>
+
+        <ListView
+            android:id="@+id/activity_list_listview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingBottom="64dp"
+            />
+
+
+    </FrameLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/activity_list_fab"
@@ -20,8 +40,8 @@
         android:layout_margin="16dp"
         android:layout_marginTop="-36dp"
         android:elevation="4sp"
-        android:src="@mipmap/ic_launcher"
-        app:layout_anchor="@id/activity_list_listview"
+        android:src="@drawable/ic_add_white_24dp"
+        app:layout_anchor="@+id/activity_list_frame"
         app:layout_anchorGravity="bottom|right|end"/>
 
 </android.support.design.widget.CoordinatorLayout>

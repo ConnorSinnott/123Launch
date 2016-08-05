@@ -74,29 +74,31 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
         mRoot = inflater.inflate(R.layout.fragment_edit_action, container, false);
         ButterKnife.bind(this, mRoot);
 
-        // If Action is not specified, throw exception
         Bundle extras = getArguments();
         if (extras != null) {
 
+            // If there are extras it means that an Action info was passed
             Utilities.checkBundleForExpectedExtras(extras,
                     EXTRA_ACTION_ID,
                     EXTRA_ACTION_ARGUMENTS);
 
+            // Get the action information: id and arguments
             int actionId = extras.getInt(EXTRA_ACTION_ID);
             ArrayList<String> actionArguments = extras.getStringArrayList(EXTRA_ACTION_ARGUMENTS);
 
-            // Restore action
+            // And recreate the action using these paremeters
             mAction = ActionManager.getInstanceOfAction(actionId);
             mAction.actionArguments = actionArguments;
 
+            // If the action has a configuration fragment, now would be the time to show it
             if (mAction.hasConfigurationFragment()) {
 
                 // Display the configuration frame
+                // Todo, change to TextView overlay with setVisibility(View.GONE)
                 mNoConfigFlipper.showNext();
 
                 // Place configuration fragment into frame
                 ConfigurationFragment configurationFragment = mAction.getConfigurationFragment();
-
                 getFragmentManager().beginTransaction()
                         .replace(R.id.fragment_edit_action_configure_frame, configurationFragment, configurationFragment.TAG)
                         .commit();
@@ -110,7 +112,8 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
 
         }
 
-        updateActionListItem();
+        // Update the view that shows the action name and its icon
+        updateCurrentActionView();
 
         mEditActionListItem.setOnClickListener(this);
         mButtonOk.setOnClickListener(this);
@@ -120,7 +123,7 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
 
     }
 
-    private void updateActionListItem() {
+    private void updateCurrentActionView() {
         mListItemActionTextView.setText(mAction.name);
         mListItemActionImageView.setImageURI(mAction.actionImage.imageUri);
     }
@@ -175,8 +178,8 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
 
             case R.id.fragment_edit_action_list_item:
 
+                // Get a list of all avilable actions and display them using a ListDialogFragment
                 ArrayList<Pair<String, DialinImage>> list = new ArrayList<>();
-
                 for (Action x : ActionManager.getActions()) {
                     list.add(new Pair<>(x.name, x.actionImage));
                 }
@@ -189,11 +192,11 @@ public class EditFragment extends Fragment implements View.OnClickListener, List
 
     }
 
-    // Used by ListDialogFragment
+    // Used by ListDialogFragment when an action has been selected from the list
     public void onListItemSelected(int position) {
 
         mAction = ActionManager.getInstanceOfAction(position);
-        updateActionListItem();
+        updateCurrentActionView();
 
     }
 

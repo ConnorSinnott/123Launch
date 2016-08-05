@@ -26,6 +26,12 @@
         android:layout_alignBottom="@+id/activity_main_top_frame"
         android:background="@color/colorPrimary"/>
 
+    <EditText
+        android:id="@+id/main_title_edittext"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/activity_main_divider"/>
+
     <Button
         android:id="@+id/main_save_button"
         android:layout_width="match_parent"
@@ -38,7 +44,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/main_save_button"
-        android:layout_below="@+id/activity_main_divider"
+        android:layout_below="@+id/main_title_edittext"
         android:padding="2dp"/>
 
 </RelativeLayout>

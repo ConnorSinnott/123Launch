@@ -87,9 +87,9 @@ public class ListDialogFragment extends DialogFragment {
                 EXTRA_NAMES,
                 EXTRA_URIS);
 
-        // Get names and drawables from arguements
+        // Get names and drawables from arguments
         mNames = extras.getStringArray(EXTRA_NAMES);
-        mDrawables = Utilities.generateBitmapDrawableArrayFromStringURI(getContext(), extras.getStringArray(EXTRA_URIS));
+        mDrawables = Utilities.generateBitmapDrawableArrayFromStringURIs(getContext(), extras.getStringArray(EXTRA_URIS));
 
         // Create list items
         ArrayList<DialogListItem> listItems = new ArrayList<>();

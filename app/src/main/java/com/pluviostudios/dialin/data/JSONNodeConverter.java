@@ -1,8 +1,5 @@
 package com.pluviostudios.dialin.data;
 
-import android.content.Context;
-import android.util.Log;
-
 import com.pluviostudios.dialin.action.Action;
 import com.pluviostudios.dialin.action.ActionManager;
 
@@ -10,7 +7,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -25,55 +21,28 @@ public class JSONNodeConverter {
     public static final String JSON_ACTION_PARAMS = "json_action_params";
     public static final String JSON_CHILDREN = "json_children";
 
-    public static void saveNodeTree(Context context, long configId, Node root) {
+    public static String convertNodeToJSON(Node root) throws JSONException {
 
-        try {
-
-            // Create the top level container for all JSON
-            JSONObject jSONContainer = new JSONObject();
-
-            // Convert the node tree to json
-            JSONObject rootJSONObject = convertNodeToJSON(root);
-
-            String dataToSave = rootJSONObject.toString();
-            FileManager.writeToFile(context, String.valueOf(configId), dataToSave);
-
-        } catch (JSONException e) {
-            Log.e(TAG, "saveNodeTree: Saving Failed", e);
-        } catch (IOException e) {
-            Log.e(TAG, "saveNodeTree: Saving failed", e);
-        }
+        JSONObject rootJSONObject = generateJSON(root);
+        return rootJSONObject.toString();
 
     }
 
     // Used by activities. This will recreate the entire node tree and load all action arguments
-    public static Node loadNodeTree(Context context, long configId) {
+    public static Node convertJSONToNodeTree(String jsonData) throws JSONException {
 
-        try {
-
-            String savedData = FileManager.readFromFile(context, String.valueOf(configId));
-            JSONObject jsonObject = new JSONObject(savedData);
-
-            return convertJSONToNode(null, jsonObject, false);
-
-        } catch (JSONException e) {
-            Log.e(TAG, "loadNodeByPath: Load Failed", e);
-        } catch (IOException e) {
-            Log.e(TAG, "loadNodeTree: Load Failed", e);
-        }
-
-        return new Node();
+        JSONObject jsonObject = new JSONObject(jsonData);
+        return generateNodeTree(null, jsonObject, false);
 
     }
 
     // Used by the widget. This will not be recursive, it will just get info about a specific node and its immediate children
-    public static Node loadNodeByPath(Context context, String name, ArrayList<Integer> path) {
+//    public static Node loadNodeByPath(Context context, String jsonData, ArrayList<Integer> path) {
+//        return new Node();
+//
+//    }
 
-        return new Node();
-
-    }
-
-    private static Node convertJSONToNode(Node parent, JSONObject object, boolean preview) throws JSONException {
+    private static Node generateNodeTree(Node parent, JSONObject object, boolean preview) throws JSONException {
 
         Node currentNode = new Node();
         currentNode.parent = parent;
@@ -131,7 +100,7 @@ public class JSONNodeConverter {
                 } else {
                     // Recursively add all children to the parent node
 
-                    Node newChild = convertJSONToNode(currentNode, jsonChildObject, false);
+                    Node newChild = generateNodeTree(currentNode, jsonChildObject, false);
                     currentNode.setChild(Integer.parseInt(currentChildIndex), newChild);
 
                 }
@@ -144,7 +113,7 @@ public class JSONNodeConverter {
 
     }
 
-    private static JSONObject convertNodeToJSON(Node node) throws JSONException {
+    private static JSONObject generateJSON(Node node) throws JSONException {
 
         JSONObject currentNode = new JSONObject();
 
@@ -201,7 +170,7 @@ public class JSONNodeConverter {
                 if (!node.getChild(currentIndex).isBlank) {
 
                     // The recursive call!!! Down the rabbit hole this goes
-                    JSONObject newChildObject = convertNodeToJSON(childNode);
+                    JSONObject newChildObject = generateJSON(childNode);
 
                     childrenObject.put(String.valueOf(currentIndex), newChildObject);
 
