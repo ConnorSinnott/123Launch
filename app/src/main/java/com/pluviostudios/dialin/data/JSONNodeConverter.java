@@ -10,21 +10,22 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
  * Created by spectre on 8/2/16.
  */
-public class StorageMananger {
+public class JSONNodeConverter {
 
-    public static final String TAG = "StorageManager";
+    public static final String TAG = "JSONNodeConverter";
 
     public static final String JSON_ACTION_ID = "json_action_id";
     public static final String JSON_ACTION_PARAMS = "json_action_params";
     public static final String JSON_CHILDREN = "json_children";
 
-    public static void saveNodeTree(Context context, String name, int buttonCount, Node root) {
+    public static void saveNodeTree(Context context, long configId, Node root) {
 
         try {
 
@@ -35,26 +36,30 @@ public class StorageMananger {
             JSONObject rootJSONObject = convertNodeToJSON(root);
 
             String dataToSave = rootJSONObject.toString();
-            FileManager.writeToFile(context, name, dataToSave);
+            FileManager.writeToFile(context, String.valueOf(configId), dataToSave);
 
         } catch (JSONException e) {
             Log.e(TAG, "saveNodeTree: Saving Failed", e);
+        } catch (IOException e) {
+            Log.e(TAG, "saveNodeTree: Saving failed", e);
         }
 
     }
 
     // Used by activities. This will recreate the entire node tree and load all action arguments
-    public static Node loadNodeTree(Context context, String name) {
+    public static Node loadNodeTree(Context context, long configId) {
 
         try {
 
-            String savedData = FileManager.readFromFile(context, name);
+            String savedData = FileManager.readFromFile(context, String.valueOf(configId));
             JSONObject jsonObject = new JSONObject(savedData);
 
             return convertJSONToNode(null, jsonObject, false);
 
         } catch (JSONException e) {
             Log.e(TAG, "loadNodeByPath: Load Failed", e);
+        } catch (IOException e) {
+            Log.e(TAG, "loadNodeTree: Load Failed", e);
         }
 
         return new Node();

@@ -1,6 +1,6 @@
 package com.pluviostudios.dialin.mainActivity;
 
-import android.appwidget.AppWidgetManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,8 +15,10 @@ import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
 import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.action.DialinImage;
+import com.pluviostudios.dialin.data.JSONNodeConverter;
 import com.pluviostudios.dialin.data.Node;
-import com.pluviostudios.dialin.data.StorageMananger;
+import com.pluviostudios.dialin.data.StorageManager;
+import com.pluviostudios.dialin.utilities.Utilities;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -25,11 +27,19 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
     public static final String TAG = "MainActivity";
 
+    public static final int EDIT_CONFIG_RESULT_CODE = 101;
+    public static final String EXTRA_CONFIG_ID = "extra_config_id";
+    public static final String EXTRA_CONFIG_TITLE = "extra_config_title";
+    public static final String EXTRA_BUTTON_COUNT = "extra_button_count";
+    public static final String EXTRA_NEW_CONFIG = "extra_new_config";
+
     @BindView(R.id.main_save_button) Button buttonOk;
 
-    private int mWidgetId;
+    private long mConfigID;
+    private String mConfigTitle;
     private int mWidgetButtonCount;
-    private boolean mLaunchOnRight = true;
+    private boolean mLaunchOnLeft;
+    private boolean mNewConfig;
 
     private Node mRootNode;
     private Node mCurrentNode = mRootNode;
@@ -38,6 +48,21 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     private ButtonsFragment mButtonsFragment;
     private EditFragment mEditFragment;
 
+    public static Intent buildMainActivityForNewConfiguration(Context context, String configTitle, int buttonCount) {
+        Intent startIntent = new Intent(context, MainActivity.class);
+        startIntent.putExtra(EXTRA_CONFIG_TITLE, configTitle);
+        startIntent.putExtra(EXTRA_BUTTON_COUNT, buttonCount);
+        return startIntent;
+    }
+
+    public static Intent buildMainActivityForNewConfiguration(Context context, String configTitle, long configId, int buttonCount) {
+        Intent startIntent = new Intent(context, MainActivity.class);
+        startIntent.putExtra(EXTRA_CONFIG_ID, configId);
+        startIntent.putExtra(EXTRA_CONFIG_TITLE, configTitle);
+        startIntent.putExtra(EXTRA_BUTTON_COUNT, buttonCount);
+        return startIntent;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -45,36 +70,32 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        // ActionManager is used globally and must be initialized first
+        // Initialize ActionManager
         ActionManager.initialize(this);
 
-        // Find which widget started this activity
-        if (getIntent().hasExtra(AppWidgetManager.EXTRA_APPWIDGET_ID)) {
+        // Get extras passed by ConfigManagerActivity
+        Bundle extras = getIntent().getExtras();
 
-            //Get mWidgetId (Will increment every time a widget is added to the home screen)
-            mWidgetId = getIntent().getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
+        // Throw exceptions if we are missing expected extras
+        Utilities.checkBundleForExpectedExtras(extras,
+                EXTRA_CONFIG_ID,
+                EXTRA_CONFIG_TITLE,
+                EXTRA_BUTTON_COUNT);
 
-            //Determine button count
-            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-            Bundle options = appWidgetManager.getAppWidgetOptions(mWidgetId);
-            int width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
-            mWidgetButtonCount = (width + 30) / 70; // Homescreen tile = n * 70 - 30
+        mConfigID = extras.getLong(EXTRA_CONFIG_ID);
+        mConfigTitle = extras.getString(EXTRA_CONFIG_TITLE);
+        mWidgetButtonCount = extras.getInt(EXTRA_BUTTON_COUNT);
 
-        } else {
+        setTitle(mConfigTitle);
 
-            // Non-developmental use should not get here. This is only a launcher for developmental purposes
-            mWidgetId = 0;
-            mWidgetButtonCount = 5;
-
-        }
-
+        // Build buttons fragment
         buildButtonsFragment();
 
-        // Set OK button to finish app config
+        // Set OK button to save changes to config file and send RESULT_OK to ConfigurationManagerActivity
         buttonOk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finishConfig();
+                finishButtonConfiguration();
             }
         });
 
@@ -82,10 +103,13 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
     private void buildButtonsFragment() {
 
-        // Load root node
-        mRootNode = loadRootNode();
-        mCurrentNode = mRootNode;
+        // Load the rootNode from file using mConfigId
+        mRootNode = StorageManager.loadNode(MainActivity.this, mConfigID);
 
+        // If the root node is blank it means that this is a new configuration
+        mNewConfig = mRootNode.isBlank;
+
+        mCurrentNode = mRootNode;
         clearEditMenu();
 
         // Todo setup system to set images
@@ -108,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         mButtonsFragment = ButtonsFragment.buildButtonsFragment(mWidgetButtonCount, defaultImages, holdImages);
 
         // Extra Params
-        if (!mLaunchOnRight)
+        if (mLaunchOnLeft)
             mButtonsFragment.getArguments().putBoolean(ButtonsFragment.EXTRA_LAUNCH_ON_LEFT, true);
 
         getSupportFragmentManager().beginTransaction()
@@ -119,10 +143,6 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
             updateButtonsFragment();
         }
 
-    }
-
-    private Node loadRootNode() {
-        return StorageMananger.loadNodeTree(this, String.valueOf(mWidgetId));
     }
 
     @Override
@@ -243,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
                     builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             // Set flag for launchOnLeft
-                            mLaunchOnRight = !mLaunchOnRight;
+                            mLaunchOnLeft = !mLaunchOnLeft;
                             // Rebuild
                             buildButtonsFragment();
                         }
@@ -256,7 +276,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
                     builder.setCancelable(true);
                     builder.create().show();
                 } else {
-                    mLaunchOnRight = !mLaunchOnRight; // Set flag for launchOnLeft
+                    mLaunchOnLeft = !mLaunchOnLeft; // Set flag for launchOnLeft
                     buildButtonsFragment(); // Rebuild
                 }
                 break;
@@ -264,22 +284,35 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         return true;
     }
 
-    // Call this when widget is ready
-    private void finishConfig() {
+    // Save the configuration file and finish activity
+    private void finishButtonConfiguration() {
 
-        StorageMananger.saveNodeTree(this, String.valueOf(mWidgetId), mWidgetButtonCount, mRootNode);
-
-        Intent resultValue = new Intent();
-        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mWidgetId);
-
-        // If the user has not added anything, consider this a cancellation
         if (!mRootNode.isBlank) {
-            setResult(RESULT_OK, resultValue);
+            StorageManager.saveConfiguration(this, mConfigID, mConfigTitle, mRootNode);
+            JSONNodeConverter.convertNodeToJSON();
+
+            Intent data = new Intent();
+            data.putExtra(EXTRA_CONFIG_ID, mConfigID);
+            data.putExtra(EXTRA_NEW_CONFIG, mNewConfig);
+            data.putExtra(EXTRA_CONFIG_TITLE, mConfigTitle);
+            data.putExtra(EXTRA_BUTTON_COUNT, mWidgetButtonCount);
+            setResult(RESULT_OK, data);
+
         } else {
-            setResult(RESULT_CANCELED, resultValue);
+            setResult(RESULT_CANCELED);
         }
 
         finish();
+
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        setResult(RESULT_CANCELED);
+        finish();
+
+        super.onBackPressed();
 
     }
 

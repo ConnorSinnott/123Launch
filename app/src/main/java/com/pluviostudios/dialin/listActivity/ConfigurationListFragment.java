@@ -28,9 +28,9 @@ import butterknife.ButterKnife;
 /**
  * Created by spectre on 8/2/16.
  */
-public class ConfigListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class ConfigurationListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    public static final String TAG = "ConfigListFragment";
+    public static final String TAG = "ConfigurationListFragment";
     public static final String EXTRA_BUTTON_COUNT = "extra_button_count";
 
     @BindView(R.id.activity_list_listview) ListView mListView;
@@ -40,12 +40,12 @@ public class ConfigListFragment extends Fragment implements LoaderManager.Loader
 
     private View mRoot;
 
-    public static ConfigListFragment buildConfigListFragment(int buttonCount) {
-        ConfigListFragment configListFragment = new ConfigListFragment();
+    public static ConfigurationListFragment buildConfigListFragment(int buttonCount) {
+        ConfigurationListFragment configurationListFragment = new ConfigurationListFragment();
         Bundle extras = new Bundle();
         extras.putInt(EXTRA_BUTTON_COUNT, buttonCount);
-        configListFragment.setArguments(extras);
-        return configListFragment;
+        configurationListFragment.setArguments(extras);
+        return configurationListFragment;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin.action.database;
+package com.pluviostudios.dialin.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
