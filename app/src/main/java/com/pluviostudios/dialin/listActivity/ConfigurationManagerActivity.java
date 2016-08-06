@@ -11,8 +11,10 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.google.common.primitives.Ints;
 import com.pluviostudios.dialin.R;
+import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.data.StorageManager;
 import com.pluviostudios.dialin.mainActivity.MainActivity;
+import com.pluviostudios.dialin.widget.SupportedWidgetSizes;
 import com.pluviostudios.dialin.widget.WidgetManager;
 import com.viewpagerindicator.TitlePageIndicator;
 
@@ -39,13 +41,13 @@ public class ConfigurationManagerActivity extends AppCompatActivity implements C
     // If this activity has been launched as a configuration activity, I only want to show configurations with the same button count
     // Otherwise, I would want to display all the options.
     // Due to this you'll see some annoying code snippits such as within getPageTitle() where I figure out whether to show 2 pages or 1. 5x1 or 4x1 or both.
-    private static final int[] POSSIBLE_SIZES = new int[]{4, 5};
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_configuration_manager);
         ButterKnife.bind(this);
+        ActionManager.initialize(this);
 
         // Check to see if this activity was started by a widget
         if (getIntent().hasExtra(AppWidgetManager.EXTRA_APPWIDGET_ID)) {
@@ -66,17 +68,17 @@ public class ConfigurationManagerActivity extends AppCompatActivity implements C
 
             @Override
             public CharSequence getPageTitle(int position) {
-                return ((mWidgetButtonCount != 0) ? mWidgetButtonCount : POSSIBLE_SIZES[position]) + "x1";
+                return ((mWidgetButtonCount != 0) ? mWidgetButtonCount : SupportedWidgetSizes.SUPPORTED_WIDGET_SIZES[position]) + "x1";
             }
 
             @Override
             public Fragment getItem(int position) {
-                return ConfigurationListFragment.buildConfigListFragment((mWidgetButtonCount == 0) ? POSSIBLE_SIZES[position] : mWidgetButtonCount);
+                return ConfigurationListFragment.buildConfigListFragment((mWidgetButtonCount == 0) ? SupportedWidgetSizes.SUPPORTED_WIDGET_SIZES[position] : mWidgetButtonCount);
             }
 
             @Override
             public int getCount() {
-                return mWidgetButtonCount != 0 ? 1 : POSSIBLE_SIZES.length;
+                return mWidgetButtonCount != 0 ? 1 : SupportedWidgetSizes.SUPPORTED_WIDGET_SIZES.length;
             }
 
         });
@@ -96,7 +98,7 @@ public class ConfigurationManagerActivity extends AppCompatActivity implements C
         Intent intent = MainActivity.buildMainActivity(this,
                 configurationTitle,
                 configurationId,
-                (mWidgetButtonCount != 0) ? mWidgetButtonCount : POSSIBLE_SIZES[mViewPager.getCurrentItem()]);
+                (mWidgetButtonCount != 0) ? mWidgetButtonCount : SupportedWidgetSizes.SUPPORTED_WIDGET_SIZES[mViewPager.getCurrentItem()]);
         startActivityForResult(intent, MainActivity.EDIT_CONFIG_RESULT_CODE);
 
     }
@@ -105,7 +107,7 @@ public class ConfigurationManagerActivity extends AppCompatActivity implements C
     @Override
     public void onNewConfiguration() {
 
-        int buttonCount = (mWidgetButtonCount != 0) ? mWidgetButtonCount : POSSIBLE_SIZES[mViewPager.getCurrentItem()];
+        int buttonCount = (mWidgetButtonCount != 0) ? mWidgetButtonCount : SupportedWidgetSizes.SUPPORTED_WIDGET_SIZES[mViewPager.getCurrentItem()];
 
         Intent intent = MainActivity.buildMainActivityForNewConfiguration(this,
                 buttonCount + "x1 New Configuration",
@@ -120,8 +122,13 @@ public class ConfigurationManagerActivity extends AppCompatActivity implements C
 
         // If the application was started by a widget
         if (mWidgetId != 0) {
+
             // Add this widget to the database and attach it to this configuration
             WidgetManager.addWidgetToDB(this, mWidgetId, configurationId);
+
+            // Update the new widget
+            WidgetManager.updateWidgets(this, mWidgetId);
+
             Intent data = new Intent();
             data.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mWidgetId);
             setResult(RESULT_OK, data);

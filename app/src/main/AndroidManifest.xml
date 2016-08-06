@@ -28,9 +28,9 @@
             android:exported="false"
             android:syncable="true"/>
 
-        <!-- 1x4 Widget -->
+        <!-- 1x4 Widget BaseWidgetProvider -->
         <receiver
-            android:name=".widget.BaseWidgetProvider$Widget4x1Provider"
+            android:name=".widget.SupportedWidgetSizes$Widget4x1Provider"
             >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
@@ -40,9 +40,9 @@
                 android:resource="@xml/widget_4x1_info"/>
         </receiver>
 
-        <!-- 1x5 Widget -->
+        <!-- 1x5 Widget BaseWidgetProvider -->
         <receiver
-            android:name=".widget.BaseWidgetProvider$Widget5x1Provider"
+            android:name=".widget.SupportedWidgetSizes$Widget5x1Provider"
             >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
@@ -57,7 +57,7 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="123GoIntent"/>
-                <!--<action android:name="android.intent.action.MAIN"/>-->
+                <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </receiver>
 

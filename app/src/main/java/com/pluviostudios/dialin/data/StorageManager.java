@@ -115,8 +115,7 @@ public class StorageManager {
         try {
 
             String savedJson = FileManager.readFromFile(context, String.valueOf(configurationId));
-            Node rootNode = JSONNodeConverter.convertJSONToNodeTree(savedJson);
-            return rootNode;
+            return JSONNodeConverter.convertJSONToNodeTree(savedJson);
 
         } catch (JSONException e) {
             Log.e(TAG, "loadNode: Unable to load configuration due to problems converting JSON to node tree", e);
@@ -129,6 +128,18 @@ public class StorageManager {
     }
 
     public static Node loadNodeForWidget(Context context, long configurationId, ArrayList<Integer> path) {
+
+        try {
+
+            String savedJson = FileManager.readFromFile(context, String.valueOf(configurationId));
+            return JSONNodeConverter.loadNodeByPath(context, savedJson, path);
+
+        } catch (JSONException e) {
+            Log.e(TAG, "loadNode: Unable to load configuration due to problems converting JSON to node tree", e);
+        } catch (IOException e) {
+            Log.e(TAG, "loadNode: Configuration file exists but is unable to be read", e);
+        }
+
         return null;
     }
 

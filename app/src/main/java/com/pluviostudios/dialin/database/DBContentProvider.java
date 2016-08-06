@@ -24,7 +24,8 @@ public class DBContentProvider extends ContentProvider {
 
     private static final SQLiteQueryBuilder sWidgetByConfigQueryBuilder;
     public static final String QUERY_INNER_JOIN = "innerJoin";
-    public static final String WIDGET_ID = "queryID";
+    public static final String WIDGET_APP_ID = "widgetAppId";
+    public static final String WIDGET_ID = "widgetId";
     public static final String CONFIG_ID = "configId";
     public static final String QUERY_BUTTON_COUNT = "buttonCount";
 
@@ -120,7 +121,17 @@ public class DBContentProvider extends ContentProvider {
                             DBContract.WidgetsEntry.TABLE_NAME + "." + DBContract.WidgetsEntry._ID + " = ?");
 
                     selectionArgs = createSelectionArgs(selectionArgs,
-                            uri.getQueryParameter(WIDGET_ID));
+                            uri.getQueryParameter(WIDGET_APP_ID));
+
+                }
+
+                if (uri.getQueryParameter(WIDGET_APP_ID) != null) {
+
+                    selection = createSelection(selection,
+                            DBContract.WidgetsEntry.TABLE_NAME + "." + DBContract.WidgetsEntry.APP_WIDGET_ID_COL + " = ?");
+
+                    selectionArgs = createSelectionArgs(selectionArgs,
+                            uri.getQueryParameter(WIDGET_APP_ID));
 
                 }
 
@@ -248,7 +259,17 @@ public class DBContentProvider extends ContentProvider {
                             DBContract.WidgetsEntry.TABLE_NAME + "." + DBContract.WidgetsEntry._ID + " = ?");
 
                     selectionArgs = createSelectionArgs(selectionArgs,
-                            uri.getQueryParameter(WIDGET_ID));
+                            uri.getQueryParameter(WIDGET_APP_ID));
+
+                }
+
+                if (uri.getQueryParameter(WIDGET_APP_ID) != null) {
+
+                    selection = createSelection(selection,
+                            DBContract.WidgetsEntry.TABLE_NAME + "." + DBContract.WidgetsEntry.APP_WIDGET_ID_COL + " = ?");
+
+                    selectionArgs = createSelectionArgs(selectionArgs,
+                            uri.getQueryParameter(WIDGET_APP_ID));
 
                 }
 
@@ -297,7 +318,17 @@ public class DBContentProvider extends ContentProvider {
                             DBContract.WidgetsEntry.TABLE_NAME + "." + DBContract.WidgetsEntry._ID + " = ?");
 
                     selectionArgs = createSelectionArgs(selectionArgs,
-                            uri.getQueryParameter(WIDGET_ID));
+                            uri.getQueryParameter(WIDGET_APP_ID));
+
+                }
+
+                if (uri.getQueryParameter(WIDGET_APP_ID) != null) {
+
+                    selection = createSelection(selection,
+                            DBContract.WidgetsEntry.TABLE_NAME + "." + DBContract.WidgetsEntry.APP_WIDGET_ID_COL + " = ?");
+
+                    selectionArgs = createSelectionArgs(selectionArgs,
+                            uri.getQueryParameter(WIDGET_APP_ID));
 
                 }
 

@@ -66,7 +66,7 @@ public class DBContract {
 
         public static final String TABLE_NAME = PATH_WIDGETS;
 
-        public static final String WIDGET_ID_COL = "widget_id";
+        public static final String APP_WIDGET_ID_COL = "widget_id";
         public static final String CONFIG_KEY_COL = "config_key";
         public static final String WIDGET_CURRENT_PATH_COL = "widget_current_path";
 
@@ -80,8 +80,12 @@ public class DBContract {
 
         // Queries
 
-        public static Uri buildWidgetWithId(long id) {
+        public static Uri buildWidgetWithID(long id) {
             return CONTENT_URI.buildUpon().appendQueryParameter(DBContentProvider.WIDGET_ID, String.valueOf(id)).build();
+        }
+
+        public static Uri buildWidgetWithAppWidgetId(int id) {
+            return CONTENT_URI.buildUpon().appendQueryParameter(DBContentProvider.WIDGET_APP_ID, String.valueOf(id)).build();
         }
 
         public static Uri buildWidgetWithConfigId(long id) {
@@ -96,8 +100,8 @@ public class DBContract {
             return buildWidgetInnerJoinConfig().buildUpon().appendQueryParameter(DBContentProvider.CONFIG_ID, String.valueOf(id)).build();
         }
 
-        public static Uri buildWidgetInnerJoinConfigWithWidgetId(long id) {
-            return buildWidgetInnerJoinConfig().buildUpon().appendQueryParameter(DBContentProvider.WIDGET_ID, String.valueOf(id)).build();
+        public static Uri buildWidgetInnerJoinConfigWithAppWidgetId(long id) {
+            return buildWidgetInnerJoinConfig().buildUpon().appendQueryParameter(DBContentProvider.WIDGET_APP_ID, String.valueOf(id)).build();
         }
 
     }

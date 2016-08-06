@@ -13,8 +13,9 @@ import android.widget.Button;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
-import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.action.DialinImage;
+import com.pluviostudios.dialin.buttonIconSet.ButtonIconSet;
+import com.pluviostudios.dialin.buttonIconSet.ButtonIconSetManager;
 import com.pluviostudios.dialin.data.Node;
 import com.pluviostudios.dialin.data.StorageManager;
 import com.pluviostudios.dialin.utilities.Utilities;
@@ -69,9 +70,6 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        // Initialize ActionManager
-        ActionManager.initialize(this);
-
         // Get extras passed by ConfigManagerActivity
         Bundle extras = getIntent().getExtras();
 
@@ -123,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         clearEditMenu();
 
         // Get the current button icon set
-        ButtonIconSet buttonIconSet = getButtonIconSet();
+        ButtonIconSet buttonIconSet = ButtonIconSetManager.getButtonIconSet(this, mWidgetButtonCount);
 
         // Generate and place ButtonsFragment in top frame
         mButtonsFragment = ButtonsFragment.buildButtonsFragment(mWidgetButtonCount, buttonIconSet);
@@ -140,9 +138,6 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
     }
 
-    private ButtonIconSet getButtonIconSet() {
-        return null;
-    }
 
     // Called when one of the buttonFragment's buttons are clicked
     @Override

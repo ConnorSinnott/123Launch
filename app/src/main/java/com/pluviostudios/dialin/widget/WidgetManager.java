@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -26,7 +27,7 @@ public class WidgetManager {
 
         ArrayList<Integer> out = new ArrayList<>();
 
-        final String[] projection = new String[]{DBContract.WidgetsEntry.WIDGET_ID_COL};
+        final String[] projection = new String[]{DBContract.WidgetsEntry.APP_WIDGET_ID_COL};
 
         Cursor c = context.getContentResolver().query(
                 DBContract.WidgetsEntry.buildWidgetWithConfigId(configurationID),
@@ -51,34 +52,39 @@ public class WidgetManager {
         for (int appWidgetId : appWidgetIds) {
 
             final String[] projection = new String[]{
-                    DBContract.WidgetsEntry.CONFIG_KEY_COL,
                     DBContract.WidgetsEntry.WIDGET_CURRENT_PATH_COL,
-                    DBContract.ConfigEntry.BUTTON_COUNT_COL
+                    DBContract.WidgetsEntry.CONFIG_KEY_COL,
+                    DBContract.ConfigEntry.BUTTON_COUNT_COL,
+                    DBContract.ConfigEntry.LAUNCH_BUTTON_INDEX
             };
 
             Cursor c = context.getContentResolver().query(
-                    DBContract.WidgetsEntry.buildWidgetInnerJoinConfigWithWidgetId(appWidgetId),
+                    DBContract.WidgetsEntry.buildWidgetInnerJoinConfigWithAppWidgetId(appWidgetId),
                     projection,
                     null, null, null, null
             );
 
             if (c != null) {
                 if (c.moveToFirst()) {
+
                     String rawPath = c.getString(0);
                     long configId = c.getLong(1);
                     int buttonCount = c.getInt(2);
+                    int launchButtonIndex = c.getInt(3);
                     c.close();
 
                     ArrayList<Integer> path = convertStringToPath(rawPath);
 
                     Node previewNode = StorageManager.loadNodeForWidget(context, configId, path);
 
-                    RemoteViews views = generateRemoteViewsFromNode(context, previewNode, buttonCount);
+                    RemoteViews views = generateRemoteViewsFromNode(context, appWidgetId, previewNode, buttonCount, launchButtonIndex);
 
                     AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
                     appWidgetManager.updateAppWidget(appWidgetId, views);
+
                 }
                 c.close();
+
             }
         }
     }
@@ -95,7 +101,7 @@ public class WidgetManager {
                 DBContract.ConfigEntry.LAUNCH_BUTTON_INDEX};
 
         Cursor c = context.getContentResolver().query(
-                DBContract.WidgetsEntry.buildWidgetInnerJoinConfigWithWidgetId(appWidgetId),
+                DBContract.WidgetsEntry.buildWidgetInnerJoinConfigWithAppWidgetId(appWidgetId),
                 projection,
                 null, null, null, null
         );
@@ -104,12 +110,11 @@ public class WidgetManager {
         if (c != null) {
             if (c.moveToFirst()) {
 
-                long configId = c.getLong(1);
+                long configId = c.getLong(0);
+                String rawPath = c.getString(1);
                 int launchButtonIndex = c.getInt(2);
-                String rawPath = c.getString(0);
                 ArrayList<Integer> path = convertStringToPath(rawPath);
                 c.close();
-
 
                 ContentValues contentValues = new ContentValues();
 
@@ -117,7 +122,9 @@ public class WidgetManager {
 
                     // Get the current Node to launch the action
                     Node node = StorageManager.loadNodeForWidget(context, configId, path);
-                    node.getAction().execute();
+                    if (node.hasAction()) {
+                        node.getAction().execute();
+                    }
 
                     // Clear path
                     contentValues.put(DBContract.WidgetsEntry.WIDGET_CURRENT_PATH_COL, "");
@@ -130,7 +137,7 @@ public class WidgetManager {
                 }
 
                 context.getContentResolver().update(
-                        DBContract.WidgetsEntry.buildWidgetWithId(appWidgetId),
+                        DBContract.WidgetsEntry.buildWidgetWithAppWidgetId(appWidgetId),
                         contentValues,
                         null, null
                 );
@@ -143,17 +150,21 @@ public class WidgetManager {
         Log.e(TAG, "onWidgetButtonClicked: Error updating widget");
     }
 
-    private static RemoteViews generateRemoteViewsFromNode(Context context, Node node, int buttonCount) {
+    private static RemoteViews generateRemoteViewsFromNode(Context context, int appWidgetId, Node node, int buttonCount, int launchButtonIndex) {
 
-//        LinearLayout buttonsView = ButtonsFragment.generateButtons(context, buttonCount, false, null);
+        ArrayList<Integer> buttonIds = SupportedWidgetSizes.getWidgetButtonIds(buttonCount);
+        RemoteViews remoteViews = SupportedWidgetSizes.getWidgetRemoteView(context, buttonCount);
 
-        // Might have to inflate a blank frame layout and .addView the buttons view
+        for (int i = 0; i < buttonCount; i++) {
+            if (i == launchButtonIndex) {
+                remoteViews.setImageViewUri(buttonIds.get(i), node.getAction().actionImage.imageUri);
+            } else {
+                remoteViews.setImageViewUri(buttonIds.get(i), node.getChild(i).getAction().actionImage.imageUri);
+            }
+            remoteViews.setOnClickPendingIntent(buttonIds.get(i), generateButtonPendingIntent(context, appWidgetId, i));
+        }
 
-//        RemoteViews remoteViews = new RemoteViews(context.getPackageName(), buttonsView);
-//        RemoteViews nettt = new RemoteViews(
-//        ComponentName thisWidget = new ComponentName(context, WidgetProvider.class);
-
-        return null;
+        return remoteViews;
 
     }
 
@@ -161,23 +172,30 @@ public class WidgetManager {
         Intent intent = new Intent(WidgetReceiver.INTENT_TYPE);
         intent.putExtra(WidgetReceiver.EXTRA_INDEX, index);
         intent.putExtra(WidgetReceiver.EXTRA_APPWIDGETID, appWidgetId);
-        return PendingIntent.getBroadcast(context, index, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getBroadcast(context, appWidgetId * 10 + index, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     // Convert raw widgetPath to int[]
     private static ArrayList<Integer> convertStringToPath(String path) {
-        String[] pathIndexes = path.split(" ");
+
         ArrayList<Integer> out = new ArrayList<>();
+
+        if (TextUtils.isEmpty(path))
+            return out;
+
+        String[] pathIndexes = path.split(" ");
         for (String x : pathIndexes) {
             out.add(Integer.parseInt(x));
         }
+
         return out;
+
     }
 
     public static void addWidgetToDB(Context context, int appWidgetId, long configurationId) {
 
         ContentValues contentValues = new ContentValues();
-        contentValues.put(DBContract.WidgetsEntry.WIDGET_ID_COL, appWidgetId);
+        contentValues.put(DBContract.WidgetsEntry.APP_WIDGET_ID_COL, appWidgetId);
         contentValues.put(DBContract.WidgetsEntry.CONFIG_KEY_COL, configurationId);
         contentValues.put(DBContract.WidgetsEntry.WIDGET_CURRENT_PATH_COL, "");
         context.getContentResolver().insert(
@@ -188,16 +206,11 @@ public class WidgetManager {
     }
 
     public static void removeWidgetFromDB(Context context, int appWidgetId) {
-
-        final String selection = DBContract.WidgetsEntry.WIDGET_ID_COL + "=?";
-        final String[] selectionArgs = new String[]{String.valueOf(appWidgetId)};
-
         context.getContentResolver().delete(
-                DBContract.WidgetsEntry.CONTENT_URI,
-                selection,
-                selectionArgs
+                DBContract.WidgetsEntry.buildWidgetWithAppWidgetId(appWidgetId),
+                null,
+                null
         );
-
     }
 
 }

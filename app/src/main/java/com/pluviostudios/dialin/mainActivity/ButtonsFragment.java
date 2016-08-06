@@ -1,6 +1,7 @@
 package com.pluviostudios.dialin.mainActivity;
 
 import android.content.Context;
+import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -14,6 +15,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import com.pluviostudios.dialin.action.DialinImage;
+import com.pluviostudios.dialin.buttonIconSet.ButtonIconSet;
 import com.pluviostudios.dialin.utilities.Utilities;
 
 /**
@@ -30,6 +32,8 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
     private LinearLayout mRoot;
     protected ButtonIconSet mButtonIconSet;
+    private ImageButton mHoldButton;
+    private StateListDrawable mHoldStateList;
     private ImageButton[] mButtons;
     private int mLaunchButtonIndex;
 
@@ -83,7 +87,7 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
             newImageButton.setTag(generateButtonTag(i));
 
             // Set button background to default image
-            newImageButton.setBackground(buttonSet.getButtonIcon(i));
+            newImageButton.setBackground(buttonSet.getButtonIconStateDrawable(i));
 
             buttonsView.addView(newImageButton);
 
@@ -92,7 +96,7 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
         // Add launch button to the parent view and set its unique icon
         ImageButton launchImageButton = new ImageButton(context);
         launchImageButton.setLayoutParams(new ViewGroup.LayoutParams(buttonSize, buttonSize));
-        launchImageButton.setBackground(buttonSet.getLauncherIcon());
+        launchImageButton.setBackground(buttonSet.getLauncherIconStateDrawable());
 
         // If launchOnLeft, place the launch button at index 0, otherwise, add it normally
         // Set the identifying tag accordingly. We can identify which is the launcher with mLauncherIndex
@@ -128,10 +132,10 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
         }
 
         // Get the passed ButtonIconSet
-        ButtonIconSet buttonIconSet = (ButtonIconSet) extras.getSerializable(EXTRA_BUTTON_SET);
+        mButtonIconSet = (ButtonIconSet) extras.getSerializable(EXTRA_BUTTON_SET);
 
         // Generate the button view
-        mRoot = generateButtons(getContext(), buttonCount, false, buttonIconSet);
+        mRoot = generateButtons(getContext(), buttonCount, false, mButtonIconSet);
 
         // The views exist but have no functionality. Find the buttons via tags and add listeners
         mButtons = new ImageButton[buttonCount];
@@ -176,10 +180,10 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
                 ImageButton currentButton = mButtons[i];
                 Uri imageUri = iconList[i].imageUri;
 
-                // Apply new image to button
+//              Apply new image to button
                 currentButton.setImageURI(imageUri);
 
-                // Invalidate button
+//              Invalidate button
                 currentButton.requestLayout();
 
             }
@@ -252,20 +256,23 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
     public void setHoldOnButton(int index) {
 
         // Set hold image
-//        if (mHoldButton != null)
-//            clearHold();
+        if (mHoldButton != null)
+            clearHold();
 
-//        mHoldButton = mButtons[index];
-//        mHoldButton.setPressed(true);
+        mHoldButton = mButtons[index];
+        mHoldStateList = (StateListDrawable) mHoldButton.getBackground();
+        mHoldButton.setBackground(mButtonIconSet.getIcon(index, true));
 
     }
 
     public void clearHold() {
 
         // Reset hold image
-//        if (mHoldButton != null) {
-//            mHoldButton.setPressed(false);
-//        }
+        if (mHoldButton != null) {
+            mHoldButton.setBackground(mHoldStateList);
+            mHoldStateList = null;
+            mHoldButton = null;
+        }
 
     }
 

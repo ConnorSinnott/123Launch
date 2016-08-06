@@ -3,6 +3,9 @@ package com.pluviostudios.dialin.widget;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
+
+import com.pluviostudios.dialin.action.ActionManager;
 
 /**
  * Created by spectre on 7/26/16.
@@ -18,6 +21,10 @@ public class WidgetReceiver extends BroadcastReceiver {
     // Called when the user clicks a widget's button
     @Override
     public void onReceive(Context context, Intent intent) {
+
+        ActionManager.initialize(context);
+
+        Log.d(TAG, "onReceive: On Button Clicked!");
 
         // Get the button index and appWidgetId
         int pathIndex = intent.getExtras().getInt(EXTRA_INDEX);

@@ -1,5 +1,7 @@
 package com.pluviostudios.dialin.data;
 
+import android.content.Context;
+
 import com.pluviostudios.dialin.action.Action;
 import com.pluviostudios.dialin.action.ActionManager;
 
@@ -36,11 +38,37 @@ public class JSONNodeConverter {
 
     }
 
-    // Used by the widget. This will not be recursive, it will just get info about a specific node and its immediate children
-//    public static Node loadNodeByPath(Context context, String jsonData, ArrayList<Integer> path) {
-//        return new Node();
-//
-//    }
+    //     Used by the widget. This will not be recursive, it will just get info about a specific node and its immediate children
+    public static Node loadNodeByPath(Context context, String jsonData, ArrayList<Integer> path) throws JSONException {
+
+        JSONObject jsonObject = new JSONObject(jsonData);
+
+        while (path.size() > 0) {
+
+            if (jsonObject.has(JSON_CHILDREN)) {
+
+                JSONObject jsonChildren = jsonObject.getJSONObject(JSON_CHILDREN);
+
+                String index = String.valueOf(path.get(0));
+
+                if (jsonChildren.has(index)) {
+
+                    path.remove(0);
+                    jsonObject = jsonChildren.getJSONObject(index);
+
+                } else {
+                    return new Node();
+                }
+
+            } else {
+                return new Node();
+            }
+
+        }
+
+        return generateNodeTree(null, jsonObject, true);
+
+    }
 
     private static Node generateNodeTree(Node parent, JSONObject object, boolean preview) throws JSONException {
 

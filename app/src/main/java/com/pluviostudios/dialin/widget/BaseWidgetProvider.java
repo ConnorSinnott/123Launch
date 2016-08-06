@@ -25,22 +25,4 @@ public class BaseWidgetProvider extends AppWidgetProvider {
         super.onDeleted(context, appWidgetIds);
     }
 
-    /**
-     * Created by spectre on 7/26/16.
-     */
-    public static class Widget4x1Provider extends BaseWidgetProvider {
-
-        public static final String TAG = "Widget4x1Provider";
-
-    }
-
-    /**
-     * Created by spectre on 7/26/16.
-     */
-    public static class Widget5x1Provider extends BaseWidgetProvider {
-
-        public static final String TAG = "Widget5x1Provider";
-
-    }
-
 }
