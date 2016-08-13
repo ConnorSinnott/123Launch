@@ -4,6 +4,8 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 
+import com.pluviostudios.dialin.action.ActionManager;
+
 /**
  * Created by spectre on 7/26/16.
  */
@@ -13,8 +15,9 @@ public class BaseWidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        super.onUpdate(context, appWidgetManager, appWidgetIds);
+        ActionManager.initialize(context);
         WidgetManager.updateWidgets(context, appWidgetIds);
+        super.onUpdate(context, appWidgetManager, appWidgetIds);
     }
 
     @Override

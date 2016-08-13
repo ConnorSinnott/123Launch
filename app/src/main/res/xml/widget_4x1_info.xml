@@ -2,10 +2,10 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
                     android:minHeight="40dp"
                     android:minWidth="250dp"
-                    android:previewImage="@drawable/blue4"
+                    android:previewImage="@drawable/ic_blue4"
                     android:resizeMode="horizontal"
                     android:updatePeriodMillis="0"
                     android:widgetCategory="home_screen"
-                    android:configure="com.pluviostudios.dialin.listActivity.ConfigurationManagerActivity"
+                    android:configure="com.pluviostudios.dialin.configManagerActivity.ConfigurationManagerActivity"
     >
 </appwidget-provider>

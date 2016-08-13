@@ -1,7 +1,5 @@
 package com.pluviostudios.dialin.data;
 
-import android.content.Context;
-
 import com.pluviostudios.dialin.action.Action;
 import com.pluviostudios.dialin.action.ActionManager;
 
@@ -39,7 +37,7 @@ public class JSONNodeConverter {
     }
 
     //     Used by the widget. This will not be recursive, it will just get info about a specific node and its immediate children
-    public static Node loadNodeByPath(Context context, String jsonData, ArrayList<Integer> path) throws JSONException {
+    public static Node loadNodeByPath(String jsonData, ArrayList<Integer> path) throws JSONException {
 
         JSONObject jsonObject = new JSONObject(jsonData);
 
@@ -94,7 +92,7 @@ public class JSONNodeConverter {
                 }
 
                 // Assign action parameters
-                action.actionArguments = actionParameters;
+                action.setActionArguments(actionParameters);
 
             }
 
@@ -122,7 +120,25 @@ public class JSONNodeConverter {
                     if (jsonChildObject.has(JSON_ACTION_ID)) {
                         int actionId = jsonChildObject.getInt(JSON_ACTION_ID);
                         Action action = ActionManager.getInstanceOfAction(actionId);
+
+                        // If the action has parameters
+                        if (jsonChildObject.has(JSON_ACTION_PARAMS)) {
+
+                            // Get action parameters
+                            JSONArray jsonActionParameters = jsonChildObject.getJSONArray(JSON_ACTION_PARAMS);
+                            ArrayList<String> actionParameters = new ArrayList<>();
+
+                            for (int i = 0; i < jsonActionParameters.length(); i++) {
+                                actionParameters.add((String) jsonActionParameters.get(i));
+                            }
+
+                            // Assign action parameters
+                            action.setActionArguments(actionParameters);
+
+                        }
+
                         newChild.setAction(action);
+
                     }
 
                 } else {
@@ -155,14 +171,14 @@ public class JSONNodeConverter {
             Action action = node.getAction();
 
             // Add the action to the passed json object
-            currentNode.put(JSON_ACTION_ID, action.id);
+            currentNode.put(JSON_ACTION_ID, action.getActionId());
 
             // If the action has arguments, add them to a JSONArray
-            if (action.actionArguments != null) {
+            if (action.getActionArguments() != null) {
 
                 JSONArray actionArguments = new JSONArray();
 
-                for (String currActionArgument : action.actionArguments) {
+                for (String currActionArgument : action.getActionArguments()) {
                     actionArguments.put(currActionArgument);
                 }
 

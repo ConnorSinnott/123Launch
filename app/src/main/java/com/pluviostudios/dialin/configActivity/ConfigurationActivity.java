@@ -1,21 +1,28 @@
-package com.pluviostudios.dialin.mainActivity;
+package com.pluviostudios.dialin.configActivity;
 
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
 import com.pluviostudios.dialin.action.DialinImage;
 import com.pluviostudios.dialin.buttonIconSet.ButtonIconSet;
 import com.pluviostudios.dialin.buttonIconSet.ButtonIconSetManager;
+import com.pluviostudios.dialin.configActivity.fragments.ButtonsFragment;
+import com.pluviostudios.dialin.configActivity.fragments.EditActionFragment;
 import com.pluviostudios.dialin.data.Node;
 import com.pluviostudios.dialin.data.StorageManager;
 import com.pluviostudios.dialin.utilities.Utilities;
@@ -23,16 +30,17 @@ import com.pluviostudios.dialin.utilities.Utilities;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements ButtonsFragment.OnButtonsFragmentButtonClicked, EditFragment.OnActionConfigured, ListDialogFragment.OnListItemSelected {
+public class ConfigurationActivity extends AppCompatActivity implements ButtonsFragment.OnButtonsFragmentButtonClicked, EditActionFragment.OnActionConfigured {
 
-    public static final String TAG = "MainActivity";
+    public static final String TAG = "ConfigurationActivity";
 
     public static final int EDIT_CONFIG_RESULT_CODE = 101;
+
     public static final String EXTRA_CONFIG_ID = "extra_config_id";
     public static final String EXTRA_CONFIG_TITLE = "extra_config_title";
     public static final String EXTRA_BUTTON_COUNT = "extra_button_count";
 
-    @BindView(R.id.main_save_button) Button buttonOk;
+    @BindView(R.id.activity_configuration_save_button) Button buttonOk;
 
     private long mConfigID;
     private String mConfigTitle;
@@ -46,17 +54,17 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     private Node mNodeBeingEdited;
 
     private ButtonsFragment mButtonsFragment;
-    private EditFragment mEditFragment;
+    private EditActionFragment mEditFragment;
 
     public static Intent buildMainActivityForNewConfiguration(Context context, String configTitle, int buttonCount) {
-        Intent startIntent = new Intent(context, MainActivity.class);
+        Intent startIntent = new Intent(context, ConfigurationActivity.class);
         startIntent.putExtra(EXTRA_CONFIG_TITLE, configTitle);
         startIntent.putExtra(EXTRA_BUTTON_COUNT, buttonCount);
         return startIntent;
     }
 
     public static Intent buildMainActivity(Context context, String configTitle, long configId, int buttonCount) {
-        Intent startIntent = new Intent(context, MainActivity.class);
+        Intent startIntent = new Intent(context, ConfigurationActivity.class);
         startIntent.putExtra(EXTRA_CONFIG_ID, configId);
         startIntent.putExtra(EXTRA_CONFIG_TITLE, configTitle);
         startIntent.putExtra(EXTRA_BUTTON_COUNT, buttonCount);
@@ -67,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_configuration);
         ButterKnife.bind(this);
 
         // Get extras passed by ConfigManagerActivity
@@ -82,14 +90,18 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         mWidgetButtonCount = extras.getInt(EXTRA_BUTTON_COUNT);
         launchButtonIndex = mLaunchOnLeft ? 0 : mWidgetButtonCount - 1;
 
+        // Set the title
+        setTitle(mConfigTitle);
+
         // Check to see if this is a new configuration
         mNewConfig = !extras.containsKey(EXTRA_CONFIG_ID);
         if (!mNewConfig) {
             mConfigID = extras.getLong(EXTRA_CONFIG_ID);
-        }
+        } else {
 
-        // Set the title
-        setTitle(mConfigTitle);
+            // Show the rename dialog if this is a new configuration
+            showRenameDialog();
+        }
 
         // Build buttons fragment
         buildButtonsFragment();
@@ -102,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
             }
         });
 
+
     }
 
     private void buildButtonsFragment() {
@@ -110,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
         if (mNewConfig) {
             mRootNode = new Node();
         } else {
-            mRootNode = StorageManager.loadNode(MainActivity.this, mConfigID);
+            mRootNode = StorageManager.loadNode(ConfigurationActivity.this, mConfigID);
         }
 
         // Set current node to root
@@ -125,16 +138,65 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
         // Generate and place ButtonsFragment in top frame
         mButtonsFragment = ButtonsFragment.buildButtonsFragment(mWidgetButtonCount, buttonIconSet);
-        mButtonsFragment.getArguments().putBoolean(ButtonsFragment.EXTRA_LAUNCH_ON_LEFT, mLaunchOnLeft);
+        mButtonsFragment.getArguments().putInt(ButtonsFragment.EXTRA_LAUNCH_INDEX, mLaunchOnLeft ? 0 : mWidgetButtonCount - 1);
 
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.activity_main_top_frame, mButtonsFragment, ButtonsFragment.TAG)
+                .replace(R.id.activity_configuration_top_frame, mButtonsFragment, ButtonsFragment.TAG)
                 .commit();
 
         // If the current node has any children, we have to call updateButtonsFragment to display them
         if (!mCurrentNode.isBlank) {
             updateButtonsFragment();
         }
+
+    }
+
+    public void showRenameDialog() {
+        // Hold the current title so it can be restored on cancel
+        final String titleHold = mConfigTitle;
+
+        // Create a new editText
+        final EditText newTitleEditText = new EditText(this);
+        newTitleEditText.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT));
+        newTitleEditText.setText(mConfigTitle);
+        newTitleEditText.selectAll();
+        newTitleEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                // On text changed, update the title. I think this looks neat
+                setTitle(charSequence);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
+
+        // Create an AlertDialog housing the edit text
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(newTitleEditText)
+                .setTitle("New Title")
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // Assign the new title here instead of the text watcher so its not constantly rewritten
+                        mConfigTitle = newTitleEditText.getText().toString();
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        mConfigTitle = titleHold;
+                        setTitle(mConfigTitle);
+                    }
+                })
+                .setCancelable(true)
+                .create().show();
 
     }
 
@@ -158,7 +220,9 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     public void onLaunchButtonClicked() {
 
         // Execute the action
-        mCurrentNode.getAction().execute();
+        if (mCurrentNode.hasAction()) {
+            mCurrentNode.getAction().execute();
+        }
 
         // Set current node back to rootNode
         mCurrentNode = mRootNode;
@@ -180,12 +244,15 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
             // Add child images
             Node currentChild = mCurrentNode.getChild(i);
-            currentImages[i] = currentChild.getAction().actionImage;
-
+            if (currentChild.hasAction()) {
+                currentImages[i] = currentChild.getAction().getActionImage();
+            }
         }
 
         // Add current (Launch button) image
-        currentImages[mWidgetButtonCount - 1] = mCurrentNode.getAction().actionImage;
+        if (mCurrentNode.hasAction()) {
+            currentImages[mWidgetButtonCount - 1] = mCurrentNode.getAction().getActionImage();
+        }
 
         // Update button fragment
         mButtonsFragment.setIcons(currentImages);
@@ -196,22 +263,22 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
 
         mNodeBeingEdited = node;
 
-        // Generate and setup the EditFragment
+        // Generate and setup the EditActionFragment
         if (mNodeBeingEdited.hasAction()) {
 
             // If the node currently has an action, pass it as a parameter
-            mEditFragment = EditFragment.buildEditFragment(mNodeBeingEdited.getAction());
+            mEditFragment = EditActionFragment.buildEditFragment(mNodeBeingEdited.getAction());
 
         } else {
 
-            // Otherwise, don't pass anything and EditFragment will create one
-            mEditFragment = EditFragment.buildEditFragment();
+            // Otherwise, don't pass anything and EditActionFragment will create one
+            mEditFragment = EditActionFragment.buildEditFragment();
 
         }
 
-        // Display EditFragment in the bottom frame
+        // Display EditActionFragment in the bottom frame
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.activity_main_bottom_frame, mEditFragment, EditFragment.TAG)
+                .replace(R.id.activity_configuration_bottom_frame, mEditFragment, EditActionFragment.TAG)
                 .commit();
 
     }
@@ -219,7 +286,7 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     private void clearEditMenu() {
         if (mEditFragment != null) {
 
-            // Remove EditFragment
+            // Remove EditActionFragment
             getSupportFragmentManager().beginTransaction().remove(mEditFragment).commit();
 
             // Clear any holds
@@ -233,13 +300,13 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     @Override
     public void onActionConfigured(Action action) {
 
-        // Once action has been setup through EditFragment, assign the new action to this node
+        // Once action has been setup through EditActionFragment, assign the new action to this node
         mNodeBeingEdited.setAction(action);
 
         // Update Buttons Fragment to display the new action
         updateButtonsFragment();
 
-        // Exit EditFragment
+        // Exit EditActionFragment
         clearEditMenu();
 
     }
@@ -247,20 +314,14 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     @Override
     public void onConfigurationCancelled() {
 
-        // Exit EditFragment
+        // Exit EditActionFragment
         clearEditMenu();
 
     }
 
-    // Used by EditFragment, re-route there
-    @Override
-    public void onListItemSelected(int position) {
-        mEditFragment.onListItemSelected(position);
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_activity_configuration, menu);
         return true;
     }
 
@@ -283,7 +344,10 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
                     });
                     builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            // On Cancel
+
+                            // On cancel, dismiss
+                            dialog.dismiss();
+
                         }
                     });
                     builder.setCancelable(true);
@@ -293,6 +357,9 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
                     buildButtonsFragment(); // Rebuild
                 }
                 break;
+            case R.id.menu_activity_configuration_rename:
+                showRenameDialog();
+                break;
         }
         return true;
     }
@@ -300,18 +367,27 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     // Save the configuration file and finish activity
     private void finishButtonConfiguration() {
 
+        // If changes have been made
         if (!mRootNode.isBlank) {
+
+            // Attempt to save the configuration and get saveResult
             Bundle saveResult;
             if (mNewConfig) {
                 saveResult = StorageManager.saveNewConfiguration(this, mConfigTitle, mWidgetButtonCount, launchButtonIndex, mRootNode);
             } else {
                 saveResult = StorageManager.saveConfiguration(this, mConfigID, mConfigTitle, mRootNode);
             }
+
+            // Pass saveResult back to parent activity with RESULT_OK
             Intent data = new Intent();
             data.putExtras(saveResult);
             setResult(RESULT_OK, data);
+
         } else {
+
+            // If changes have not been made, cancel
             setResult(RESULT_CANCELED);
+
         }
 
         finish();
@@ -321,11 +397,17 @@ public class MainActivity extends AppCompatActivity implements ButtonsFragment.O
     @Override
     public void onBackPressed() {
 
-        setResult(RESULT_CANCELED);
+        // If the back button is pressed, cancel without saving
+        // Todo, is this default behavior?
+
         finish();
 
         super.onBackPressed();
 
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(new Bundle());
+    }
 }

@@ -1,8 +1,7 @@
 package com.pluviostudios.dialin.action;
 
+import android.content.Context;
 import android.util.Log;
-
-import com.pluviostudios.dialin.action.defaultActions.DefaultAction;
 
 import java.util.ArrayList;
 
@@ -13,22 +12,22 @@ public abstract class Action {
 
     public static final String TAG = "Action";
 
-    public String name;
-    public int id;
-    public DialinImage actionImage;
-    public ArrayList<String> actionArguments;
+    private ArrayList<String> mActionArguments;
+    private ConfigurationFragment mConfigurationFragment;
 
-    public static final Action DefaultDialinAction = new DefaultAction();
+    public abstract int getActionId();
 
-    public Action(String name, int id) {
-        this(name, id, DialinImage.defaultActionImage);
+    public abstract String getActionName();
+
+    public abstract DialinImage getActionImage();
+
+    public boolean hasConfigurationFragment() {
+        return buildConfigurationFragment() != null;
     }
 
-    public Action(String name, int id, DialinImage actionImage) {
-        this.name = name;
-        this.id = id;
-        this.actionImage = actionImage;
-    }
+    public abstract ConfigurationFragment buildConfigurationFragment();
+
+    public abstract boolean onExecute();
 
     public boolean execute() {
         try {
@@ -39,16 +38,32 @@ public abstract class Action {
         }
     }
 
+    public ConfigurationFragment getConfigurationFragment() {
+        if (mConfigurationFragment == null) {
+            mConfigurationFragment = buildConfigurationFragment();
+            if (mActionArguments != null) {
+                mConfigurationFragment.setActionArguments(mActionArguments);
+            }
+        }
+        return mConfigurationFragment;
+    }
+
     public void saveArguments() {
-        if (hasConfigurationFragment()) {
-            actionArguments = getConfigurationFragment().getActionArguements();
+        if (hasConfigurationFragment() && mConfigurationFragment != null) {
+            setActionArguments(getConfigurationFragment().getActionArguments());
         }
     }
 
-    public abstract boolean onExecute();
+    public void setActionArguments(ArrayList<String> actionArguments) {
+        this.mActionArguments = actionArguments;
+    }
 
-    public abstract boolean hasConfigurationFragment();
+    public ArrayList<String> getActionArguments() {
+        return mActionArguments;
+    }
 
-    public abstract ConfigurationFragment getConfigurationFragment();
+    protected Context getContext() {
+        return ActionManager.getContext();
+    }
 
 }

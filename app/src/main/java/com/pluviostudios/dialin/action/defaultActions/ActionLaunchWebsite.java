@@ -2,15 +2,14 @@ package com.pluviostudios.dialin.action.defaultActions;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
-import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
 import com.pluviostudios.dialin.action.DialinImage;
 
@@ -23,14 +22,25 @@ public class ActionLaunchWebsite extends Action {
 
     public static final String TAG = "ActionLaunchWebsite";
 
-    public ActionLaunchWebsite() {
-        super("Launch Website", 1, new DialinImage(ActionManager.getContext(), R.drawable.chrome_icon));
+    @Override
+    public int getActionId() {
+        return 1;
+    }
+
+    @Override
+    public String getActionName() {
+        return "Launch Website";
+    }
+
+    @Override
+    public DialinImage getActionImage() {
+        return new DialinImage(getContext(), R.drawable.chrome_icon);
     }
 
     @Override
     public boolean onExecute() {
 
-        String address = actionArguments.get(0);
+        String address = getActionArguments().get(0);
 
         if (!address.startsWith("http://") && !address.startsWith("https://"))
             address = "http://" + address;
@@ -38,32 +48,44 @@ public class ActionLaunchWebsite extends Action {
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(address));
         browserIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        ActionManager.getContext().startActivity(browserIntent);
+        getContext().startActivity(browserIntent);
 
         return true;
 
     }
 
     @Override
-    public boolean hasConfigurationFragment() {
-        return true;
-    }
-
-    @Override
-    public ConfigurationFragment getConfigurationFragment() {
+    public ConfigurationFragment buildConfigurationFragment() {
         return new ActionLaunchWebsiteConfigFragment();
     }
 
     public static class ActionLaunchWebsiteConfigFragment extends ConfigurationFragment {
 
+        EditText mEditText;
+
         @Override
-        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-            return super.onCreateView(inflater, container, savedInstanceState);
+        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable ArrayList<String> savedActionArguments) {
+
+            mEditText = new EditText(getContext());
+            mEditText.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            mEditText.setHint("Website URL");
+
+            if (savedActionArguments != null) {
+                String currentWebsite = savedActionArguments.get(0);
+                mEditText.setText(currentWebsite);
+            }
+
+            return mEditText;
+
         }
 
         @Override
-        public ArrayList<String> getActionArguements() {
-            return null;
+        public ArrayList<String> getActionArguments() {
+
+            ArrayList<String> out = new ArrayList<>();
+            out.add(mEditText.getText().toString());
+            return out;
+
         }
 
     }

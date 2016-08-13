@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".mainActivity.MainActivity">
+    tools:context=".configActivity.ConfigurationActivity">
 
     <FrameLayout
-        android:id="@+id/activity_main_top_frame"
+        android:id="@+id/activity_configuration_top_frame"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/stripe"
@@ -20,31 +20,25 @@
         />
 
     <FrameLayout
-        android:id="@+id/activity_main_divider"
+        android:id="@+id/activity_configuration_divider"
         android:layout_width="match_parent"
         android:layout_height="4dp"
-        android:layout_alignBottom="@+id/activity_main_top_frame"
+        android:layout_alignBottom="@+id/activity_configuration_top_frame"
         android:background="@color/colorPrimary"/>
 
-    <EditText
-        android:id="@+id/main_title_edittext"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/activity_main_divider"/>
-
     <Button
-        android:id="@+id/main_save_button"
+        android:id="@+id/activity_configuration_save_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:text="@string/done"/>
 
     <FrameLayout
-        android:id="@+id/activity_main_bottom_frame"
+        android:id="@+id/activity_configuration_bottom_frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/main_save_button"
-        android:layout_below="@+id/main_title_edittext"
+        android:layout_above="@+id/activity_configuration_save_button"
+        android:layout_below="@+id/activity_configuration_divider"
         android:padding="2dp"/>
 
 </RelativeLayout>

@@ -7,9 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.RemoteViews;
 
+import com.pluviostudios.dialin.buttonIconSet.ButtonIconSet;
+import com.pluviostudios.dialin.buttonIconSet.ButtonIconSetManager;
 import com.pluviostudios.dialin.data.Node;
 import com.pluviostudios.dialin.data.StorageManager;
 import com.pluviostudios.dialin.database.DBContract;
@@ -23,10 +24,20 @@ public class WidgetManager {
 
     public static final String TAG = "WidgetManager";
 
+
+    /**
+     * Queries the database for a list of AppWidgetIds currently using the configuration with the passed ConfigurationID
+     *
+     * @param context         Application context
+     * @param configurationID The requested configurationID
+     * @return A list of AppWidgetIds which are currently using the provided ConfigurationId
+     */
     public static ArrayList<Integer> getWidgetsUsingConfig(Context context, long configurationID) {
 
+        // Create the output ArrayList
         ArrayList<Integer> out = new ArrayList<>();
 
+        // Query the database for AppWidgetIds using the provided configurationID
         final String[] projection = new String[]{DBContract.WidgetsEntry.APP_WIDGET_ID_COL};
 
         Cursor c = context.getContentResolver().query(
@@ -35,27 +46,39 @@ public class WidgetManager {
                 null, null, null, null
         );
 
+        // If the cursor is not null and there are entries
         if (c != null) {
             if (c.moveToFirst()) {
                 do {
+                    // Add each appWidgetId to the output ArrayList
                     out.add(c.getInt(0));
                 } while (c.moveToNext());
             }
             c.close();
         }
+
+        // Return the output arrayList
         return out;
 
     }
 
+    /**
+     * Queries the database and updates the provided appWidgetIds using their current path and configuration
+     *
+     * @param context      Application Context
+     * @param appWidgetIds The appWidgetIds to be updated
+     */
     public static void updateWidgets(Context context, int... appWidgetIds) {
 
+        // For each passed appWidgetId
         for (int appWidgetId : appWidgetIds) {
 
+            // Query the database for all required information
             final String[] projection = new String[]{
-                    DBContract.WidgetsEntry.WIDGET_CURRENT_PATH_COL,
-                    DBContract.WidgetsEntry.CONFIG_KEY_COL,
-                    DBContract.ConfigEntry.BUTTON_COUNT_COL,
-                    DBContract.ConfigEntry.LAUNCH_BUTTON_INDEX
+                    DBContract.WidgetsEntry.WIDGET_CURRENT_PATH_COL, // The widget's current path (Ex. "0 2 1"). This determines how the node tree will be traversed
+                    DBContract.WidgetsEntry.CONFIG_KEY_COL, // The widget's configurationId. This will determine which node tree will be loaded for the widget
+                    DBContract.ConfigEntry.BUTTON_COUNT_COL, // The widget's button count. Used to generate the view
+                    DBContract.ConfigEntry.LAUNCH_BUTTON_INDEX // The widget's launch button index. Which button execute the node.
             };
 
             Cursor c = context.getContentResolver().query(
@@ -64,34 +87,42 @@ public class WidgetManager {
                     null, null, null, null
             );
 
+            // If the cursor is not null and there are entries
             if (c != null) {
                 if (c.moveToFirst()) {
 
+                    // Extract all the information mentioned above
                     String rawPath = c.getString(0);
                     long configId = c.getLong(1);
                     int buttonCount = c.getInt(2);
                     int launchButtonIndex = c.getInt(3);
-                    c.close();
 
+                    // Convert the rawPath (Ex. "0 2 1") into an ArrayList (essentially String.split(" ") )
                     ArrayList<Integer> path = convertStringToPath(rawPath);
 
+                    // Load the configuration via ID, and generate the node located at the end of the pathLoad the node at the end of the path.
                     Node previewNode = StorageManager.loadNodeForWidget(context, configId, path);
 
+                    // Generate the remoteViews using the previewNode
                     RemoteViews views = generateRemoteViewsFromNode(context, appWidgetId, previewNode, buttonCount, launchButtonIndex);
 
+                    // Update the widget
                     AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
                     appWidgetManager.updateAppWidget(appWidgetId, views);
 
                 }
                 c.close();
-
             }
         }
     }
 
     /**
-     * This function either appends index to the end of the widgetsCurrent path, or launches the current action
-     * and clears the path. It should call updateWidgets after to update the UI
+     * Using the passed appWidgetId, query the database for the current path associated with that id.
+     * Then, either append to the path the passed index, or execute the node at the end of the path and reset the path.
+     *
+     * @param context     Application context
+     * @param appWidgetId The appWidgetId which had a button clicked
+     * @param index       Which button was clicked
      */
     public static void onWidgetButtonClicked(Context context, int appWidgetId, int index) {
 
@@ -106,7 +137,7 @@ public class WidgetManager {
                 null, null, null, null
         );
 
-        // Get Widget Info
+        // If the cursor is not null and there are entries
         if (c != null) {
             if (c.moveToFirst()) {
 
@@ -116,52 +147,87 @@ public class WidgetManager {
                 ArrayList<Integer> path = convertStringToPath(rawPath);
                 c.close();
 
+                // Create contentValues because the widget's path will need to be updated
                 ContentValues contentValues = new ContentValues();
 
+                // If the button pressed was the widget's launch button
                 if (index == launchButtonIndex) {
 
-                    // Get the current Node to launch the action
+                    // Load the configuration via ID, and generate the node located at the end of the pathLoad the node at the end of the path.
                     Node node = StorageManager.loadNodeForWidget(context, configId, path);
                     if (node.hasAction()) {
+                        // If that node has an action, execute it.
                         node.getAction().execute();
                     }
 
-                    // Clear path
+                    // Clear the widgets path
                     contentValues.put(DBContract.WidgetsEntry.WIDGET_CURRENT_PATH_COL, "");
 
                 } else {
 
-                    // Otherwise append a new path segment and update widget
+                    // If the launch button was not pressed, append a new path segment and update widget
                     contentValues.put(DBContract.WidgetsEntry.WIDGET_CURRENT_PATH_COL, rawPath + " " + index);
 
                 }
 
+                // Update the database with the new path
                 context.getContentResolver().update(
                         DBContract.WidgetsEntry.buildWidgetWithAppWidgetId(appWidgetId),
                         contentValues,
                         null, null
                 );
 
+                // Update the widget, now that the widget has a new path
                 updateWidgets(context, appWidgetId);
 
             }
             c.close();
         }
-        Log.e(TAG, "onWidgetButtonClicked: Error updating widget");
     }
 
     private static RemoteViews generateRemoteViewsFromNode(Context context, int appWidgetId, Node node, int buttonCount, int launchButtonIndex) {
 
         ArrayList<Integer> buttonIds = SupportedWidgetSizes.getWidgetButtonIds(buttonCount);
+        ArrayList<Integer> backgroundIds = SupportedWidgetSizes.getWidgetButtonBackgroundIds(buttonCount);
         RemoteViews remoteViews = SupportedWidgetSizes.getWidgetRemoteView(context, buttonCount);
+
+        ButtonIconSet buttonIconSet = ButtonIconSetManager.getButtonIconSet(context, buttonCount);
 
         for (int i = 0; i < buttonCount; i++) {
             if (i == launchButtonIndex) {
-                remoteViews.setImageViewUri(buttonIds.get(i), node.getAction().actionImage.imageUri);
+
+                // Set icon
+                if (node.hasAction()) {
+                    remoteViews.setImageViewUri(buttonIds.get(i), node.getAction().getActionImage().getImageUri());
+                } else {
+                    remoteViews.setImageViewBitmap(buttonIds.get(i), null);
+                }
+
+                // Set select highlight
+                remoteViews.setInt(buttonIds.get(i), "setBackgroundResource", buttonIconSet.getButtonHighlightStateDrawableResourceId());
+
+                // Set background
+                remoteViews.setImageViewUri(backgroundIds.get(i), buttonIconSet.getLauncher());
+
             } else {
-                remoteViews.setImageViewUri(buttonIds.get(i), node.getChild(i).getAction().actionImage.imageUri);
+
+                // Set icon
+                if (node.getChild(i).hasAction()) {
+                    remoteViews.setImageViewUri(buttonIds.get(i), node.getChild(i).getAction().getActionImage().getImageUri());
+                } else {
+                    remoteViews.setImageViewBitmap(buttonIds.get(i), null);
+                }
+
+                // Set select highlight
+                remoteViews.setInt(buttonIds.get(i), "setBackgroundResource", buttonIconSet.getButtonHighlightStateDrawableResourceId());
+
+                // Set background
+                remoteViews.setImageViewUri(backgroundIds.get(i), buttonIconSet.getIcon(i));
+
             }
+
             remoteViews.setOnClickPendingIntent(buttonIds.get(i), generateButtonPendingIntent(context, appWidgetId, i));
+
         }
 
         return remoteViews;
@@ -169,9 +235,9 @@ public class WidgetManager {
     }
 
     private static PendingIntent generateButtonPendingIntent(Context context, int appWidgetId, int index) {
-        Intent intent = new Intent(WidgetReceiver.INTENT_TYPE);
+        Intent intent = new Intent(WidgetReceiver.ACTION_BUTTON_CLICKED);
         intent.putExtra(WidgetReceiver.EXTRA_INDEX, index);
-        intent.putExtra(WidgetReceiver.EXTRA_APPWIDGETID, appWidgetId);
+        intent.putExtra(WidgetReceiver.EXTRA_APP_WIDGET_ID, appWidgetId);
         return PendingIntent.getBroadcast(context, appWidgetId * 10 + index, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 

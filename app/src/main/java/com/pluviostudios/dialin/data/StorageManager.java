@@ -132,7 +132,7 @@ public class StorageManager {
         try {
 
             String savedJson = FileManager.readFromFile(context, String.valueOf(configurationId));
-            return JSONNodeConverter.loadNodeByPath(context, savedJson, path);
+            return JSONNodeConverter.loadNodeByPath(savedJson, path);
 
         } catch (JSONException e) {
             Log.e(TAG, "loadNode: Unable to load configuration due to problems converting JSON to node tree", e);

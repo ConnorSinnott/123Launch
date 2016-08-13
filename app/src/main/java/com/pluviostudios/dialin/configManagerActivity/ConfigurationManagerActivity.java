@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin.listActivity;
+package com.pluviostudios.dialin.configManagerActivity;
 
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
@@ -13,7 +13,8 @@ import com.google.common.primitives.Ints;
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.data.StorageManager;
-import com.pluviostudios.dialin.mainActivity.MainActivity;
+import com.pluviostudios.dialin.configActivity.ConfigurationActivity;
+import com.pluviostudios.dialin.configManagerActivity.fragments.ConfigurationListFragment;
 import com.pluviostudios.dialin.widget.SupportedWidgetSizes;
 import com.pluviostudios.dialin.widget.WidgetManager;
 import com.viewpagerindicator.TitlePageIndicator;
@@ -95,11 +96,11 @@ public class ConfigurationManagerActivity extends AppCompatActivity implements C
     public void onConfigurationEdit(String configurationTitle, long configurationId) {
 
         // Launch the configuration activity
-        Intent intent = MainActivity.buildMainActivity(this,
+        Intent intent = ConfigurationActivity.buildMainActivity(this,
                 configurationTitle,
                 configurationId,
                 (mWidgetButtonCount != 0) ? mWidgetButtonCount : SupportedWidgetSizes.SUPPORTED_WIDGET_SIZES[mViewPager.getCurrentItem()]);
-        startActivityForResult(intent, MainActivity.EDIT_CONFIG_RESULT_CODE);
+        startActivityForResult(intent, ConfigurationActivity.EDIT_CONFIG_RESULT_CODE);
 
     }
 
@@ -109,10 +110,10 @@ public class ConfigurationManagerActivity extends AppCompatActivity implements C
 
         int buttonCount = (mWidgetButtonCount != 0) ? mWidgetButtonCount : SupportedWidgetSizes.SUPPORTED_WIDGET_SIZES[mViewPager.getCurrentItem()];
 
-        Intent intent = MainActivity.buildMainActivityForNewConfiguration(this,
+        Intent intent = ConfigurationActivity.buildMainActivityForNewConfiguration(this,
                 buttonCount + "x1 New Configuration",
                 buttonCount);
-        startActivityForResult(intent, MainActivity.EDIT_CONFIG_RESULT_CODE);
+        startActivityForResult(intent, ConfigurationActivity.EDIT_CONFIG_RESULT_CODE);
 
     }
 
@@ -143,7 +144,7 @@ public class ConfigurationManagerActivity extends AppCompatActivity implements C
         super.onActivityResult(requestCode, resultCode, data);
 
         // If RESULT_OK
-        if (requestCode == MainActivity.EDIT_CONFIG_RESULT_CODE && resultCode == RESULT_OK) {
+        if (requestCode == ConfigurationActivity.EDIT_CONFIG_RESULT_CODE && resultCode == RESULT_OK) {
 
             ArrayList<Integer> affectedWidgetIds = data.getExtras().getIntegerArrayList(StorageManager.EXTRA_AFFECTED_APPWIDGETIDS);
             if (affectedWidgetIds != null) {

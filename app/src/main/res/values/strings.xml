@@ -3,4 +3,5 @@
     <string name="done">Done</string>
     <string name="ok">Ok</string>
     <string name="cancel">Cancel</string>
+    <string name="launch">Launch %s</string>
 </resources>

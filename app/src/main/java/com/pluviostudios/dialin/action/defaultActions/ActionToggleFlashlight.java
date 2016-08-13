@@ -4,7 +4,6 @@ import android.hardware.Camera;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
-import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
 import com.pluviostudios.dialin.action.DialinImage;
 
@@ -17,8 +16,19 @@ public class ActionToggleFlashlight extends Action {
 
     private static Camera sCamera;
 
-    public ActionToggleFlashlight() {
-        super("Toggle Flashlight", 0, new DialinImage(ActionManager.getContext(), R.drawable.flash));
+    @Override
+    public int getActionId() {
+        return 0;
+    }
+
+    @Override
+    public String getActionName() {
+        return "Toggle Flashlight";
+    }
+
+    @Override
+    public DialinImage getActionImage() {
+        return new DialinImage(getContext(), R.drawable.flash);
     }
 
     @Override
@@ -45,12 +55,7 @@ public class ActionToggleFlashlight extends Action {
     }
 
     @Override
-    public boolean hasConfigurationFragment() {
-        return false;
-    }
-
-    @Override
-    public ConfigurationFragment getConfigurationFragment() {
+    public ConfigurationFragment buildConfigurationFragment() {
         return null;
     }
 

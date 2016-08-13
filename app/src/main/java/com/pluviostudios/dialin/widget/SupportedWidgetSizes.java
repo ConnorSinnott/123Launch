@@ -14,17 +14,17 @@ public class SupportedWidgetSizes {
 
     /**
      * To support an additional widget size, follow the steps below.
-     * <p>
+     * <p/>
      * 1. Make a copy of an existing widget_{count}x1_info xml document and set android:minWidth to {count} * 70 - 30
-     * <p>
+     * <p/>
      * 2. Create a new BaseWidgetProvider subclass class such as the ones found at the bottom of this file
-     * <p>
+     * <p/>
      * 3. Add the new BaseWidgetProvider to the manifest and have android:resource point to the xml document created in step 1
-     * <p>
+     * <p/>
      * 4. Make a copy of an existing widget_{count}x1 xml layout and add new image buttons with incrementing ids using the format "widget_button_{index}"
-     * <p>
+     * <p/>
      * 5. Update the function getWidgetButtonIds below, adding the new ids to a case statement relevant to the new size
-     * <p>
+     * <p/>
      * 6. Update the function getWidgetRemoteView below, adding the newly created xml layout in a case statement relevant to the new size
      */
     public static final int[] SUPPORTED_WIDGET_SIZES = new int[]{4, 5};
@@ -43,6 +43,25 @@ public class SupportedWidgetSizes {
 
         if (buttonCount >= 5) {
             buttonIds.add(R.id.widget_button_5);
+        }
+
+        return buttonIds;
+
+    }
+
+    public static ArrayList<Integer> getWidgetButtonBackgroundIds(int buttonCount) {
+
+        ArrayList<Integer> buttonIds = new ArrayList<>();
+
+        if (buttonCount >= 4) {
+            buttonIds.add(R.id.widget_background_1);
+            buttonIds.add(R.id.widget_background_2);
+            buttonIds.add(R.id.widget_background_3);
+            buttonIds.add(R.id.widget_background_4);
+        }
+
+        if (buttonCount >= 5) {
+            buttonIds.add(R.id.widget_background_5);
         }
 
         return buttonIds;

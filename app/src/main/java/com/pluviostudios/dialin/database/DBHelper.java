@@ -32,7 +32,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 + DBContract.WidgetsEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + DBContract.WidgetsEntry.APP_WIDGET_ID_COL + " INTEGER NOT NULL,"
                 + DBContract.WidgetsEntry.CONFIG_KEY_COL + " LONG NOT NULL,"
-                + DBContract.WidgetsEntry.WIDGET_CURRENT_PATH_COL + "STRING NOT NULL, "
+                + DBContract.WidgetsEntry.WIDGET_CURRENT_PATH_COL + " STRING NOT NULL, "
                 + " FOREIGN KEY (" + DBContract.WidgetsEntry.CONFIG_KEY_COL + ") REFERENCES "
                 + DBContract.ConfigEntry.TABLE_NAME + " (" + DBContract.ConfigEntry._ID + ")"
                 + " UNIQUE (" + DBContract.WidgetsEntry.APP_WIDGET_ID_COL + ") ON CONFLICT REPLACE)";

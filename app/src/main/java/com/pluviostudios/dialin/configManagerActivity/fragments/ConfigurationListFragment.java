@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin.listActivity;
+package com.pluviostudios.dialin.configManagerActivity.fragments;
 
 import android.content.Context;
 import android.database.Cursor;

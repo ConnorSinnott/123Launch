@@ -4,20 +4,16 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 
+import java.io.Serializable;
+
 /**
  * Created by spectre on 7/26/16.
  */
-public class DialinImage {
+public class DialinImage implements Serializable {
 
     public static final String TAG = "DialinImage";
 
-    public static DialinImage defaultActionImage = new DialinImage();
-
-    public Uri imageUri;
-
-    public DialinImage() {
-        imageUri = Uri.EMPTY;
-    }
+    private Uri imageUri;
 
     public DialinImage(Uri imageUri) {
         this.imageUri = imageUri;
@@ -28,6 +24,10 @@ public class DialinImage {
                 context.getResources().getResourcePackageName(imageResource) + '/' +
                 context.getResources().getResourceTypeName(imageResource) + '/' +
                 context.getResources().getResourceEntryName(imageResource));
+    }
+
+    public Uri getImageUri() {
+        return imageUri;
     }
 
 }

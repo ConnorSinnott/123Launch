@@ -1,7 +1,6 @@
 package com.pluviostudios.dialin.data;
 
 import com.pluviostudios.dialin.action.Action;
-import com.pluviostudios.dialin.action.defaultActions.DefaultAction;
 
 import java.util.HashMap;
 
@@ -23,8 +22,7 @@ public class Node {
 
     public Node(Node parent) {
         this.parent = parent;
-        mChildren = new HashMap<Integer, Node>();
-        mAction = Action.DefaultDialinAction;
+        mChildren = new HashMap<>();
     }
 
     /**
@@ -54,7 +52,7 @@ public class Node {
     }
 
     public boolean hasAction() {
-        return !(mAction instanceof DefaultAction);
+        return mAction != null;
     }
 
     /**

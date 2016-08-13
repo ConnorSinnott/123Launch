@@ -1,7 +1,9 @@
 package com.pluviostudios.dialin.action;
 
 import android.content.Context;
+import android.util.Log;
 
+import com.pluviostudios.dialin.action.defaultActions.ActionLaunchApplication;
 import com.pluviostudios.dialin.action.defaultActions.ActionLaunchWebsite;
 import com.pluviostudios.dialin.action.defaultActions.ActionToggleFlashlight;
 
@@ -33,6 +35,7 @@ public class ActionManager {
                 {
                     add(new ActionToggleFlashlight());
                     add(new ActionLaunchWebsite());
+                    add(new ActionLaunchApplication());
                 }
             };
         }
@@ -43,8 +46,15 @@ public class ActionManager {
 
         if (sContext != null) {
             for (Action x : getActions()) {
-                if (x.id == actionId)
-                    return x;
+                if (x.getActionId() == actionId)
+                    try {
+                        return x.getClass().newInstance();
+                    } catch (InstantiationException e) {
+                        Log.e(TAG, "getInstanceOfAction: Error creating new instance of " + x.getActionName(), e);
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
             }
             throw new RuntimeException("ActionId " + actionId + " not found");
         } else {

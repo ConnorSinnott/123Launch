@@ -24,8 +24,12 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="6"
+        android:paddingEnd="10dp"
         android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingStart="10dp"
         android:text="Unset"
-        android:textSize="20dp"/>
+        android:textSize="20dp"
+        />
 
 </LinearLayout>
