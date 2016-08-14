@@ -13,4 +13,12 @@
         android:title="Switch launch side"
         app:showAsAction="never"/>
 
+    <item
+        android:id="@+id/menu_appearance"
+        android:title="Widget Appearance"/>
+
+    <item
+        android:id="@+id/menu_settings"
+        android:title="Settings"/>
+
 </menu>

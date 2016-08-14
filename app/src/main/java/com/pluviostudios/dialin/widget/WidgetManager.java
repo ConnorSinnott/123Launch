@@ -129,10 +129,10 @@ public class WidgetManager {
         final String[] projection = new String[]{
                 DBContract.WidgetsEntry.CONFIG_KEY_COL,
                 DBContract.WidgetsEntry.WIDGET_CURRENT_PATH_COL,
-                DBContract.ConfigEntry.LAUNCH_BUTTON_INDEX};
+        };
 
         Cursor c = context.getContentResolver().query(
-                DBContract.WidgetsEntry.buildWidgetInnerJoinConfigWithAppWidgetId(appWidgetId),
+                DBContract.WidgetsEntry.buildWidgetWithAppWidgetId(appWidgetId),
                 projection,
                 null, null, null, null
         );
@@ -143,7 +143,6 @@ public class WidgetManager {
 
                 long configId = c.getLong(0);
                 String rawPath = c.getString(1);
-                int launchButtonIndex = c.getInt(2);
                 ArrayList<Integer> path = convertStringToPath(rawPath);
                 c.close();
 
@@ -151,7 +150,7 @@ public class WidgetManager {
                 ContentValues contentValues = new ContentValues();
 
                 // If the button pressed was the widget's launch button
-                if (index == launchButtonIndex) {
+                if (index < 0) {
 
                     // Load the configuration via ID, and generate the node located at the end of the pathLoad the node at the end of the path.
                     Node node = StorageManager.loadNodeForWidget(context, configId, path);
@@ -193,8 +192,14 @@ public class WidgetManager {
 
         ButtonIconSet buttonIconSet = ButtonIconSetManager.getButtonIconSet(context, buttonCount);
 
+        boolean launchPlaced = false;
         for (int i = 0; i < buttonCount; i++) {
+
+            int relativeChildIndex = i - (launchPlaced ? 1 : 0);
+
             if (i == launchButtonIndex) {
+
+                launchPlaced = true;
 
                 // Set icon
                 if (node.hasAction()) {
@@ -209,11 +214,15 @@ public class WidgetManager {
                 // Set background
                 remoteViews.setImageViewUri(backgroundIds.get(i), buttonIconSet.getLauncher());
 
+                remoteViews.setOnClickPendingIntent(buttonIds.get(i), generateButtonPendingIntent(context, appWidgetId, -1));
+
             } else {
 
+                Node childNode = node.getChild(relativeChildIndex);
+
                 // Set icon
-                if (node.getChild(i).hasAction()) {
-                    remoteViews.setImageViewUri(buttonIds.get(i), node.getChild(i).getAction().getActionImage().getImageUri());
+                if (childNode.hasAction()) {
+                    remoteViews.setImageViewUri(buttonIds.get(i), childNode.getAction().getActionImage().getImageUri());
                 } else {
                     remoteViews.setImageViewBitmap(buttonIds.get(i), null);
                 }
@@ -222,11 +231,11 @@ public class WidgetManager {
                 remoteViews.setInt(buttonIds.get(i), "setBackgroundResource", buttonIconSet.getButtonHighlightStateDrawableResourceId());
 
                 // Set background
-                remoteViews.setImageViewUri(backgroundIds.get(i), buttonIconSet.getIcon(i));
+                remoteViews.setImageViewUri(backgroundIds.get(i), buttonIconSet.getIcon(relativeChildIndex));
+
+                remoteViews.setOnClickPendingIntent(buttonIds.get(i), generateButtonPendingIntent(context, appWidgetId, relativeChildIndex));
 
             }
-
-            remoteViews.setOnClickPendingIntent(buttonIds.get(i), generateButtonPendingIntent(context, appWidgetId, i));
 
         }
 

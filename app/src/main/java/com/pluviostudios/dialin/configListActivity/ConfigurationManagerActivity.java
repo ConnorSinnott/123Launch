@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin.configManagerActivity;
+package com.pluviostudios.dialin.configListActivity;
 
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
@@ -8,13 +8,17 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import com.google.common.primitives.Ints;
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.ActionManager;
+import com.pluviostudios.dialin.appearanceActivity.AppearanceActivity;
+import com.pluviostudios.dialin.buttonsActivity.ButtonsActivity;
+import com.pluviostudios.dialin.configListActivity.fragments.ConfigurationListFragment;
 import com.pluviostudios.dialin.data.StorageManager;
-import com.pluviostudios.dialin.configActivity.ConfigurationActivity;
-import com.pluviostudios.dialin.configManagerActivity.fragments.ConfigurationListFragment;
+import com.pluviostudios.dialin.settings.SettingsActivity;
 import com.pluviostudios.dialin.widget.SupportedWidgetSizes;
 import com.pluviostudios.dialin.widget.WidgetManager;
 import com.viewpagerindicator.TitlePageIndicator;
@@ -30,8 +34,6 @@ import butterknife.ButterKnife;
 public class ConfigurationManagerActivity extends AppCompatActivity implements ConfigurationListFragment.OnConfigurationSelected {
 
     public static final String TAG = "ConfigManagerActivity";
-
-    private static final String STATE_PAGE_INDEX = "extra_page";
 
     @BindView(R.id.activity_configuration_manager_viewpager) ViewPager mViewPager;
     @BindView(R.id.activity_configuration_manager_titles) TitlePageIndicator mTitlePageIndicator;
@@ -93,14 +95,11 @@ public class ConfigurationManagerActivity extends AppCompatActivity implements C
 
     // Called when the user is attempting to edit a configuration
     @Override
-    public void onConfigurationEdit(String configurationTitle, long configurationId) {
+    public void onConfigurationEdit(long configurationId) {
 
         // Launch the configuration activity
-        Intent intent = ConfigurationActivity.buildMainActivity(this,
-                configurationTitle,
-                configurationId,
-                (mWidgetButtonCount != 0) ? mWidgetButtonCount : SupportedWidgetSizes.SUPPORTED_WIDGET_SIZES[mViewPager.getCurrentItem()]);
-        startActivityForResult(intent, ConfigurationActivity.EDIT_CONFIG_RESULT_CODE);
+        Intent intent = ButtonsActivity.buildMainActivity(this, configurationId);
+        startActivityForResult(intent, ButtonsActivity.EDIT_CONFIG_RESULT_CODE);
 
     }
 
@@ -110,10 +109,10 @@ public class ConfigurationManagerActivity extends AppCompatActivity implements C
 
         int buttonCount = (mWidgetButtonCount != 0) ? mWidgetButtonCount : SupportedWidgetSizes.SUPPORTED_WIDGET_SIZES[mViewPager.getCurrentItem()];
 
-        Intent intent = ConfigurationActivity.buildMainActivityForNewConfiguration(this,
+        Intent intent = ButtonsActivity.buildMainActivityForNewConfiguration(this,
                 buttonCount + "x1 New Configuration",
                 buttonCount);
-        startActivityForResult(intent, ConfigurationActivity.EDIT_CONFIG_RESULT_CODE);
+        startActivityForResult(intent, ButtonsActivity.EDIT_CONFIG_RESULT_CODE);
 
     }
 
@@ -144,7 +143,7 @@ public class ConfigurationManagerActivity extends AppCompatActivity implements C
         super.onActivityResult(requestCode, resultCode, data);
 
         // If RESULT_OK
-        if (requestCode == ConfigurationActivity.EDIT_CONFIG_RESULT_CODE && resultCode == RESULT_OK) {
+        if (requestCode == ButtonsActivity.EDIT_CONFIG_RESULT_CODE && resultCode == RESULT_OK) {
 
             ArrayList<Integer> affectedWidgetIds = data.getExtras().getIntegerArrayList(StorageManager.EXTRA_AFFECTED_APPWIDGETIDS);
             if (affectedWidgetIds != null) {
@@ -155,4 +154,28 @@ public class ConfigurationManagerActivity extends AppCompatActivity implements C
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_activity_configuration_list, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+            case R.id.menu_settings: {
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                break;
+            }
+            case R.id.menu_appearance: {
+                Intent intent = new Intent(this, AppearanceActivity.class);
+                startActivity(intent);
+                break;
+            }
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 }

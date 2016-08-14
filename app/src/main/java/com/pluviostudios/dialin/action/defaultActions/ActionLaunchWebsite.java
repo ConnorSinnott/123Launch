@@ -8,8 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
-import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
+import com.pluviostudios.dialin.action.ActionTools;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
 import com.pluviostudios.dialin.action.DialinImage;
 
@@ -34,7 +34,9 @@ public class ActionLaunchWebsite extends Action {
 
     @Override
     public DialinImage getActionImage() {
-        return new DialinImage(getContext(), R.drawable.chrome_icon);
+        Intent i = (new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com")));
+        Uri preferredActionUri = ActionTools.getPrefferedApplicationIconUri(getContext(), i);
+        return new DialinImage(preferredActionUri);
     }
 
     @Override

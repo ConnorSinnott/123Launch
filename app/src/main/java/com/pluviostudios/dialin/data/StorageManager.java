@@ -66,7 +66,7 @@ public class StorageManager {
 
     }
 
-    public static Bundle saveConfiguration(Context context, long configurationId, String configurationTitle, Node node) {
+    public static Bundle saveConfiguration(Context context, long configurationId, String configurationTitle, int launchButtonIndex, Node node) {
 
         // Create a bundle which will hold information about how the save went
         Bundle data = new Bundle();
@@ -89,6 +89,7 @@ public class StorageManager {
             ContentValues newValues = new ContentValues();
             newValues.put(DBContract.ConfigEntry.DATE_MODIFIED, Calendar.getInstance().getTimeInMillis());
             newValues.put(DBContract.ConfigEntry.TITLE_COL, configurationTitle);
+            newValues.put(DBContract.ConfigEntry.LAUNCH_BUTTON_INDEX, launchButtonIndex);
             context.getContentResolver().update(
                     DBContract.ConfigEntry.CONTENT_URI,
                     newValues,

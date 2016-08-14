@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin.configActivity.fragments;
+package com.pluviostudios.dialin.buttonsActivity.fragments;
 
 import android.content.Context;
 import android.net.Uri;

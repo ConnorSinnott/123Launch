@@ -1,6 +1,5 @@
 package com.pluviostudios.dialin.action.defaultActions;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -12,6 +11,7 @@ import android.view.ViewGroup;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
+import com.pluviostudios.dialin.action.ActionTools;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
 import com.pluviostudios.dialin.action.DialinImage;
 import com.pluviostudios.dialin.dialogFragments.IconListDialogFragment;
@@ -29,7 +29,7 @@ public class ActionLaunchApplication extends Action {
 
     public static final String TAG = "ActionLaunchApplication";
 
-    private static final int INDEX_ACTION = 0;
+    private static final int INDEX_APPLICATION_PACKAGE_NAME = 0;
     private static final int INDEX_APPLICATION_NAME = 1;
     private static final int INDEX_APPLICATION_ICON_URI = 2;
 
@@ -62,7 +62,7 @@ public class ActionLaunchApplication extends Action {
     @Override
     public boolean onExecute() {
 
-        Intent launchIntent = getContext().getPackageManager().getLaunchIntentForPackage(getActionArguments().get(INDEX_ACTION));
+        Intent launchIntent = getContext().getPackageManager().getLaunchIntentForPackage(getActionArguments().get(INDEX_APPLICATION_PACKAGE_NAME));
         getContext().startActivity(launchIntent);
         return true;
 
@@ -87,20 +87,27 @@ public class ActionLaunchApplication extends Action {
         @Override
         public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable ArrayList<String> savedActionArguments) {
 
-            // Get Application info list
+            // Generate list fragment
+            IconListDialogFragment<ApplicationInfo> listDialogFragment = new IconListDialogFragment<>();
 
+            // Get Application info list and sort it alphabetically
             ArrayList<ApplicationInfo> applicationInfoList = new ArrayList<>(getContext().getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA));
-
             Collections.sort(applicationInfoList, new Comparator<ApplicationInfo>() {
                 @Override
                 public int compare(ApplicationInfo applicationInfo, ApplicationInfo t1) {
-                    String leftName = getForeignApplicationNameFromInfo(getContext(), applicationInfo);
-                    String rightName = getForeignApplicationNameFromInfo(getContext(), t1);
+                    String leftName = ActionTools.getForeignApplicationNameFromInfo(getContext(), applicationInfo);
+                    String rightName = ActionTools.getForeignApplicationNameFromInfo(getContext(), t1);
                     return leftName.toLowerCase().charAt(0) < rightName.toLowerCase().charAt(0) ? -1 : 1;
                 }
             });
 
-            // Create list items
+
+            String savedAppPackageName = null;
+            if (savedActionArguments != null) {
+                savedAppPackageName = savedActionArguments.get(INDEX_APPLICATION_PACKAGE_NAME);
+            }
+
+            // Filter Application info list to remove system applications and mark previous selection to be selected on init
             ArrayList<ApplicationInfo> listItems = new ArrayList<>();
             while (applicationInfoList.size() > 0) {
 
@@ -111,19 +118,30 @@ public class ActionLaunchApplication extends Action {
 
                 listItems.add(appInfo);
 
+                if (savedAppPackageName != null) {
+                    if (appInfo.packageName.equals(savedAppPackageName)) {
+                        listDialogFragment.setSelected(listItems.size());
+                        savedAppPackageName = null;
+                    }
+                }
+
             }
 
-            IconListDialogFragment<ApplicationInfo> listDialogFragment = new IconListDialogFragment<>();
+            // Todo The saved application was removed. This probably isn't the best place to deal with this
+            if (savedAppPackageName != null) {
+
+            }
+
             listDialogFragment.setItems(listItems);
             listDialogFragment.setItemAdapter(new IconListDialogFragment.IconListDialogItemAdapter<ApplicationInfo>() {
                 @Override
                 public String getString(ApplicationInfo object) {
-                    return getForeignApplicationNameFromInfo(getContext(), object);
+                    return ActionTools.getForeignApplicationNameFromInfo(getContext(), object);
                 }
 
                 @Override
                 public Uri getImageUri(ApplicationInfo object) {
-                    return getForeignApplicationImageUriFromInfo(object);
+                    return ActionTools.getForeignApplicationImageUriFromInfo(object);
                 }
             });
             listDialogFragment.setOnListItemSelected(new IconListDialogFragment.OnListItemSelected<ApplicationInfo>() {
@@ -142,24 +160,13 @@ public class ActionLaunchApplication extends Action {
 
             if (selectedInfo != null) {
                 out.add(selectedInfo.packageName);
-                out.add(getForeignApplicationNameFromInfo(getContext(), selectedInfo));
-                out.add(getForeignApplicationImageUriFromInfo(selectedInfo).toString());
+                out.add(ActionTools.getForeignApplicationNameFromInfo(getContext(), selectedInfo));
+                out.add(ActionTools.getForeignApplicationImageUriFromInfo(selectedInfo).toString());
             }
 
             return out;
         }
 
-    }
-
-    private static String getForeignApplicationNameFromInfo(Context context, ApplicationInfo info) {
-        return info.loadLabel(context.getPackageManager()).toString();
-    }
-
-    private static Uri getForeignApplicationImageUriFromInfo(ApplicationInfo info) {
-        if (info.icon != 0) {
-            return Uri.parse("android.resource://" + info.packageName + "/" + info.icon);
-        } else
-            return null;
     }
 
 }

@@ -1,8 +1,9 @@
-package com.pluviostudios.dialin.configActivity;
+package com.pluviostudios.dialin.buttonsActivity;
 
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -19,35 +20,43 @@ import android.widget.EditText;
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
 import com.pluviostudios.dialin.action.DialinImage;
+import com.pluviostudios.dialin.appearanceActivity.AppearanceActivity;
 import com.pluviostudios.dialin.buttonIconSet.ButtonIconSet;
 import com.pluviostudios.dialin.buttonIconSet.ButtonIconSetManager;
-import com.pluviostudios.dialin.configActivity.fragments.ButtonsFragment;
-import com.pluviostudios.dialin.configActivity.fragments.EditActionFragment;
+import com.pluviostudios.dialin.buttonsActivity.fragments.ButtonsFragment;
+import com.pluviostudios.dialin.buttonsActivity.fragments.EditActionFragment;
 import com.pluviostudios.dialin.data.Node;
 import com.pluviostudios.dialin.data.StorageManager;
+import com.pluviostudios.dialin.database.DBContract;
+import com.pluviostudios.dialin.settings.SettingsActivity;
 import com.pluviostudios.dialin.utilities.Utilities;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class ConfigurationActivity extends AppCompatActivity implements ButtonsFragment.OnButtonsFragmentButtonClicked, EditActionFragment.OnActionConfigured {
+import static com.pluviostudios.dialin.appearanceActivity.AppearanceActivity.APPEARANCE_ACTIVITY_REQUEST_CODE;
+import static com.pluviostudios.dialin.appearanceActivity.AppearanceActivity.EXTRA_CHANGES_MADE;
 
-    public static final String TAG = "ConfigurationActivity";
+public class ButtonsActivity extends AppCompatActivity implements ButtonsFragment.OnButtonsFragmentButtonClicked, EditActionFragment.OnActionConfigured {
+
+    public static final String TAG = "ButtonsActivity";
 
     public static final int EDIT_CONFIG_RESULT_CODE = 101;
 
     public static final String EXTRA_CONFIG_ID = "extra_config_id";
     public static final String EXTRA_CONFIG_TITLE = "extra_config_title";
     public static final String EXTRA_BUTTON_COUNT = "extra_button_count";
+    public static final String EXTRA_LAUNCH_BUTTON_INDEX = "extra_launch_button_index";
+    public
 
-    @BindView(R.id.activity_configuration_save_button) Button buttonOk;
+    @BindView(R.id.activity_buttons_save_button) Button buttonOk;
 
     private long mConfigID;
     private String mConfigTitle;
     private int mWidgetButtonCount;
     private boolean mNewConfig;
-    private boolean mLaunchOnLeft;
-    private int launchButtonIndex;
+    private boolean mLaunchOnLeft = false;
+    private int mLaunchButtonIndex;
 
     private Node mRootNode;
     private Node mCurrentNode = mRootNode;
@@ -57,25 +66,54 @@ public class ConfigurationActivity extends AppCompatActivity implements ButtonsF
     private EditActionFragment mEditFragment;
 
     public static Intent buildMainActivityForNewConfiguration(Context context, String configTitle, int buttonCount) {
-        Intent startIntent = new Intent(context, ConfigurationActivity.class);
+        Intent startIntent = new Intent(context, ButtonsActivity.class);
         startIntent.putExtra(EXTRA_CONFIG_TITLE, configTitle);
         startIntent.putExtra(EXTRA_BUTTON_COUNT, buttonCount);
         return startIntent;
     }
 
-    public static Intent buildMainActivity(Context context, String configTitle, long configId, int buttonCount) {
-        Intent startIntent = new Intent(context, ConfigurationActivity.class);
-        startIntent.putExtra(EXTRA_CONFIG_ID, configId);
-        startIntent.putExtra(EXTRA_CONFIG_TITLE, configTitle);
-        startIntent.putExtra(EXTRA_BUTTON_COUNT, buttonCount);
-        return startIntent;
+    public static Intent buildMainActivity(Context context, long configId) {
+
+        // Get configuration title, button count and launch index from database
+        final String[] projection = new String[]{
+                DBContract.ConfigEntry.TITLE_COL,
+                DBContract.ConfigEntry.BUTTON_COUNT_COL,
+                DBContract.ConfigEntry.LAUNCH_BUTTON_INDEX
+        };
+
+        Cursor c = context.getContentResolver().query(DBContract.ConfigEntry.buildConfigWithId(configId),
+                projection,
+                null, null, null, null);
+
+        if (c != null) {
+            if (c.moveToFirst()) {
+
+                String title = c.getString(0);
+                int buttonCount = c.getInt(1);
+                int launchIndex = c.getInt(2);
+
+                Intent startIntent = buildMainActivityForNewConfiguration(context, title, buttonCount);
+                startIntent.putExtra(EXTRA_LAUNCH_BUTTON_INDEX, launchIndex);
+                startIntent.putExtra(EXTRA_CONFIG_ID, configId);
+
+                c.close();
+
+                return startIntent;
+
+            } else {
+                throw new RuntimeException("ConfigID " + configId + " not found");
+            }
+        } else {
+            throw new RuntimeException("ConfigID " + configId + " not found");
+        }
+
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_configuration);
+        setContentView(R.layout.activity_buttons);
         ButterKnife.bind(this);
 
         // Get extras passed by ConfigManagerActivity
@@ -88,7 +126,15 @@ public class ConfigurationActivity extends AppCompatActivity implements ButtonsF
 
         mConfigTitle = extras.getString(EXTRA_CONFIG_TITLE);
         mWidgetButtonCount = extras.getInt(EXTRA_BUTTON_COUNT);
-        launchButtonIndex = mLaunchOnLeft ? 0 : mWidgetButtonCount - 1;
+
+        if (extras.containsKey(EXTRA_LAUNCH_BUTTON_INDEX)) {
+            mLaunchButtonIndex = extras.getInt(EXTRA_LAUNCH_BUTTON_INDEX);
+            if (mLaunchButtonIndex > 0) {
+                mLaunchOnLeft = false;
+            }
+        } else {
+            mLaunchButtonIndex = mLaunchOnLeft ? 0 : (mWidgetButtonCount - 1);
+        }
 
         // Set the title
         setTitle(mConfigTitle);
@@ -97,10 +143,11 @@ public class ConfigurationActivity extends AppCompatActivity implements ButtonsF
         mNewConfig = !extras.containsKey(EXTRA_CONFIG_ID);
         if (!mNewConfig) {
             mConfigID = extras.getLong(EXTRA_CONFIG_ID);
+            mRootNode = StorageManager.loadNode(ButtonsActivity.this, mConfigID);
         } else {
-
             // Show the rename dialog if this is a new configuration
             showRenameDialog();
+            mRootNode = new Node();
         }
 
         // Build buttons fragment
@@ -119,18 +166,10 @@ public class ConfigurationActivity extends AppCompatActivity implements ButtonsF
 
     private void buildButtonsFragment() {
 
-        // Load the rootNode from file using mConfigId
-        if (mNewConfig) {
-            mRootNode = new Node();
-        } else {
-            mRootNode = StorageManager.loadNode(ConfigurationActivity.this, mConfigID);
-        }
-
         // Set current node to root
         mCurrentNode = mRootNode;
 
         // Clear edit menu if it is open
-        // Todo might not be needed
         clearEditMenu();
 
         // Get the current button icon set
@@ -138,10 +177,11 @@ public class ConfigurationActivity extends AppCompatActivity implements ButtonsF
 
         // Generate and place ButtonsFragment in top frame
         mButtonsFragment = ButtonsFragment.buildButtonsFragment(mWidgetButtonCount, buttonIconSet);
-        mButtonsFragment.getArguments().putInt(ButtonsFragment.EXTRA_LAUNCH_INDEX, mLaunchOnLeft ? 0 : mWidgetButtonCount - 1);
+        mButtonsFragment.getArguments().putInt(ButtonsFragment.EXTRA_LAUNCH_BUTTON_INDEX, mLaunchButtonIndex);
+        mButtonsFragment.setOnButtonsFragmentButtonClicked(this);
 
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.activity_configuration_top_frame, mButtonsFragment, ButtonsFragment.TAG)
+                .replace(R.id.activity_buttons_top_frame, mButtonsFragment, ButtonsFragment.TAG)
                 .commit();
 
         // If the current node has any children, we have to call updateButtonsFragment to display them
@@ -159,6 +199,8 @@ public class ConfigurationActivity extends AppCompatActivity implements ButtonsF
         final EditText newTitleEditText = new EditText(this);
         newTitleEditText.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT));
         newTitleEditText.setText(mConfigTitle);
+        newTitleEditText.setMaxLines(1);
+        newTitleEditText.setSingleLine();
         newTitleEditText.selectAll();
         newTitleEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -237,25 +279,21 @@ public class ConfigurationActivity extends AppCompatActivity implements ButtonsF
 
     private void updateButtonsFragment() {
 
-        // Todo This system does not support LaunchOnLeft
+        DialinImage launcherIcon = null;
+        DialinImage[] childrenIcons = new DialinImage[mWidgetButtonCount - 1];
 
-        DialinImage[] currentImages = new DialinImage[mWidgetButtonCount];
+        if (mCurrentNode.hasAction()) {
+            launcherIcon = mCurrentNode.getAction().getActionImage();
+        }
+
         for (int i = 0; i < mWidgetButtonCount - 1; i++) {
-
-            // Add child images
-            Node currentChild = mCurrentNode.getChild(i);
-            if (currentChild.hasAction()) {
-                currentImages[i] = currentChild.getAction().getActionImage();
+            Node childNode = mCurrentNode.getChild(i);
+            if (childNode.hasAction()) {
+                childrenIcons[i] = childNode.getAction().getActionImage();
             }
         }
 
-        // Add current (Launch button) image
-        if (mCurrentNode.hasAction()) {
-            currentImages[mWidgetButtonCount - 1] = mCurrentNode.getAction().getActionImage();
-        }
-
-        // Update button fragment
-        mButtonsFragment.setIcons(currentImages);
+        mButtonsFragment.setIcons(launcherIcon, childrenIcons);
 
     }
 
@@ -278,7 +316,7 @@ public class ConfigurationActivity extends AppCompatActivity implements ButtonsF
 
         // Display EditActionFragment in the bottom frame
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.activity_configuration_bottom_frame, mEditFragment, EditActionFragment.TAG)
+                .replace(R.id.activity_buttons_bottom_frame, mEditFragment, EditActionFragment.TAG)
                 .commit();
 
     }
@@ -328,38 +366,28 @@ public class ConfigurationActivity extends AppCompatActivity implements ButtonsF
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menu_main_switch_launch_side:
-                // If the user has made progress, alert the user that progress will be lost
-                if (!mRootNode.isBlank) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setIcon(android.R.drawable.stat_sys_warning);
-                    builder.setMessage("To apply this change the widget will need to be reset.");
-                    builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            // Set flag for launchOnLeft
-                            mLaunchOnLeft = !mLaunchOnLeft;
-                            // Rebuild
-                            buildButtonsFragment();
-                        }
-                    });
-                    builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-
-                            // On cancel, dismiss
-                            dialog.dismiss();
-
-                        }
-                    });
-                    builder.setCancelable(true);
-                    builder.create().show();
-                } else {
-                    mLaunchOnLeft = !mLaunchOnLeft; // Set flag for launchOnLeft
-                    buildButtonsFragment(); // Rebuild
-                }
+            case R.id.menu_main_switch_launch_side: {
+                // Set flag for launchOnLeft
+                mLaunchOnLeft = !mLaunchOnLeft;
+                mLaunchButtonIndex = mLaunchOnLeft ? 0 : mWidgetButtonCount - 1;
+                // Rebuild
+                buildButtonsFragment();
                 break;
-            case R.id.menu_activity_configuration_rename:
+            }
+            case R.id.menu_activity_configuration_rename: {
                 showRenameDialog();
                 break;
+            }
+            case R.id.menu_appearance: {
+                Intent intent = new Intent(this, AppearanceActivity.class);
+                startActivityForResult(intent, APPEARANCE_ACTIVITY_REQUEST_CODE);
+                break;
+            }
+            case R.id.menu_settings: {
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                break;
+            }
         }
         return true;
     }
@@ -373,9 +401,9 @@ public class ConfigurationActivity extends AppCompatActivity implements ButtonsF
             // Attempt to save the configuration and get saveResult
             Bundle saveResult;
             if (mNewConfig) {
-                saveResult = StorageManager.saveNewConfiguration(this, mConfigTitle, mWidgetButtonCount, launchButtonIndex, mRootNode);
+                saveResult = StorageManager.saveNewConfiguration(this, mConfigTitle, mWidgetButtonCount, mLaunchButtonIndex, mRootNode);
             } else {
-                saveResult = StorageManager.saveConfiguration(this, mConfigID, mConfigTitle, mRootNode);
+                saveResult = StorageManager.saveConfiguration(this, mConfigID, mConfigTitle, mLaunchButtonIndex, mRootNode);
             }
 
             // Pass saveResult back to parent activity with RESULT_OK
@@ -395,19 +423,23 @@ public class ConfigurationActivity extends AppCompatActivity implements ButtonsF
     }
 
     @Override
-    public void onBackPressed() {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
 
-        // If the back button is pressed, cancel without saving
-        // Todo, is this default behavior?
+            case AppearanceActivity.APPEARANCE_ACTIVITY_REQUEST_CODE: {
+                if (resultCode == RESULT_OK) {
 
-        finish();
+                    // If changes were made to the widget's appearance, rebuild the fragment
+                    Bundle resultExtras = data.getExtras();
+                    if (resultExtras.containsKey(AppearanceActivity.EXTRA_CHANGES_MADE) && resultExtras.getBoolean(EXTRA_CHANGES_MADE)) {
+                        buildButtonsFragment();
+                    }
 
-        super.onBackPressed();
+                }
+                break;
+            }
 
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(new Bundle());
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }

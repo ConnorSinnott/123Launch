@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin.configManagerActivity.fragments;
+package com.pluviostudios.dialin.configListActivity.fragments;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -153,9 +153,8 @@ public class ConfigurationListFragment extends Fragment implements LoaderManager
             View parentView = ((ViewGroup) view.getParent());
 
             long configId = (long) parentView.getTag();
-            String configTitle = ((TextView) parentView.findViewById(R.id.config_list_item_textview)).getText().toString();
 
-            mOnConfigurationSelected.onConfigurationEdit(configTitle, configId);
+            mOnConfigurationSelected.onConfigurationEdit(configId);
 
         } else {
             // The user is selecting a configuration | view = configuration list item
@@ -168,7 +167,7 @@ public class ConfigurationListFragment extends Fragment implements LoaderManager
     }
 
     public interface OnConfigurationSelected {
-        void onConfigurationEdit(String configurationTitle, long configurationId);
+        void onConfigurationEdit(long configurationId);
 
         void onConfigurationSelected(long configurationId);
 

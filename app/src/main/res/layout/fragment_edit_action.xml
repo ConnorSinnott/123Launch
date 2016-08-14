@@ -7,7 +7,8 @@
 
     <include
         android:id="@+id/fragment_edit_action_list_item"
-        layout="@layout/list_item_action"/>
+        layout="@layout/list_item_action"
+        />
 
     <TextView
         android:id="@+id/fragment_edit_action_no_config"

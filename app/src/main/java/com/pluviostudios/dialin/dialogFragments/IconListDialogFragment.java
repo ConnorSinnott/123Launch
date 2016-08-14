@@ -35,9 +35,8 @@ public class IconListDialogFragment<T> extends DialogFragment {
     @BindView(R.id.dialog_fragment_action_list_list_view) ListView mListView;
 
     private ArrayList<T> objectList;
+    private Integer mSelected;
     private boolean isDialog = false;
-    private Integer mSelectedIndex = null;
-
     protected OnListItemSelected mOnListItemSelected;
     protected IconListDialogItemAdapter mItemAdapter;
 
@@ -46,6 +45,14 @@ public class IconListDialogFragment<T> extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         isDialog = true;
         return super.onCreateDialog(savedInstanceState);
+    }
+
+    public void setItems(ArrayList<T> objectList) {
+        this.objectList = objectList;
+    }
+
+    public void setSelected(int position) {
+        mSelected = position;
     }
 
     @Override
@@ -57,16 +64,21 @@ public class IconListDialogFragment<T> extends DialogFragment {
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
                 if (mOnListItemSelected != null) {
-                    onSelected(i);
+
+                    mOnListItemSelected.onListItemSelected(objectList.get(i), i);
+                    mSelected = i;
+                    view.setSelected(true);
+
                 }
                 if (isDialog) {
                     dismiss();
                 }
             }
         });
-
         return mRoot;
+
     }
 
     private class DialogListAdapter extends ArrayAdapter<T> {
@@ -86,10 +98,6 @@ public class IconListDialogFragment<T> extends DialogFragment {
 
             T currObject = getItem(position);
 
-            if (mSelectedIndex != null && position == mSelectedIndex) {
-                convertView.setBackgroundColor(getResources().getColor(R.color.colorAccent));
-            }
-
             Uri displayUri = mItemAdapter.getImageUri(currObject);
             String displayName = mItemAdapter.getString(currObject);
 
@@ -99,14 +107,6 @@ public class IconListDialogFragment<T> extends DialogFragment {
             return convertView;
 
         }
-    }
-
-    public void onSelected(int position) {
-        if (mOnListItemSelected != null) {
-            mOnListItemSelected.onListItemSelected(objectList.get(position), position);
-            mSelectedIndex = position;
-        }
-        mListView.invalidate();
     }
 
     public interface OnListItemSelected<T> {
@@ -127,10 +127,6 @@ public class IconListDialogFragment<T> extends DialogFragment {
 
     public void setItemAdapter(IconListDialogItemAdapter<T> itemAdapter) {
         mItemAdapter = itemAdapter;
-    }
-
-    public void setItems(ArrayList<T> objectlist) {
-        this.objectList = objectlist;
     }
 
 }

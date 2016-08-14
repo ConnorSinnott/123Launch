@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".configActivity.ConfigurationActivity">
+    tools:context=".buttonsActivity.ButtonsActivity">
 
     <FrameLayout
-        android:id="@+id/activity_configuration_top_frame"
+        android:id="@+id/activity_buttons_top_frame"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/stripe"
@@ -20,25 +20,25 @@
         />
 
     <FrameLayout
-        android:id="@+id/activity_configuration_divider"
+        android:id="@+id/activity_buttons_divider"
         android:layout_width="match_parent"
         android:layout_height="4dp"
-        android:layout_alignBottom="@+id/activity_configuration_top_frame"
+        android:layout_alignBottom="@+id/activity_buttons_top_frame"
         android:background="@color/colorPrimary"/>
 
     <Button
-        android:id="@+id/activity_configuration_save_button"
+        android:id="@+id/activity_buttons_save_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:text="@string/done"/>
 
     <FrameLayout
-        android:id="@+id/activity_configuration_bottom_frame"
+        android:id="@+id/activity_buttons_bottom_frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/activity_configuration_save_button"
-        android:layout_below="@+id/activity_configuration_divider"
+        android:layout_above="@+id/activity_buttons_save_button"
+        android:layout_below="@+id/activity_buttons_divider"
         android:padding="2dp"/>
 
 </RelativeLayout>
