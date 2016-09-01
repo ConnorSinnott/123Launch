@@ -95,6 +95,13 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".action.OnPackageUninstall">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_FULLY_REMOVED"/>
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name=".settings.SettingsActivity"
             android:label="@string/title_activity_settings">

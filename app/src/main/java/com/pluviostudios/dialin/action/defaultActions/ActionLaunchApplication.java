@@ -32,8 +32,6 @@ import java.util.Comparator;
  */
 public class ActionLaunchApplication extends Action {
 
-    // TODO What happens when the user removes the application
-
     public static final String TAG = "ActionLaunchApplication";
 
     private static final int INDEX_APPLICATION_PACKAGE_NAME = 0;
