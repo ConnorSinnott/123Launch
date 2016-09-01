@@ -1,11 +1,12 @@
 package com.pluviostudios.dialin.action.defaultActions;
 
 import android.hardware.Camera;
+import android.net.Uri;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
+import com.pluviostudios.dialin.action.ActionTools;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
-import com.pluviostudios.dialin.action.DialinImage;
 
 /**
  * Created by spectre on 7/31/16.
@@ -27,8 +28,8 @@ public class ActionToggleFlashlight extends Action {
     }
 
     @Override
-    public DialinImage getActionImage() {
-        return new DialinImage(getContext(), R.drawable.flash);
+    public Uri getActionImageUri() {
+        return ActionTools.convertResourceToUri(getContext(), R.drawable.flash);
     }
 
     @Override

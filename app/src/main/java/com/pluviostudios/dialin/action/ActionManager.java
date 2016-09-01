@@ -6,6 +6,7 @@ import android.util.Log;
 import com.pluviostudios.dialin.action.defaultActions.ActionLaunchApplication;
 import com.pluviostudios.dialin.action.defaultActions.ActionLaunchWebsite;
 import com.pluviostudios.dialin.action.defaultActions.ActionToggleFlashlight;
+import com.pluviostudios.dialin.action.defaultActions.EmptyAction;
 
 import java.util.ArrayList;
 
@@ -33,6 +34,7 @@ public class ActionManager {
         if (sActions == null) {
             sActions = new ArrayList<Action>() {
                 {
+                    add(new EmptyAction());
                     add(new ActionToggleFlashlight());
                     add(new ActionLaunchWebsite());
                     add(new ActionLaunchApplication());
@@ -42,13 +44,17 @@ public class ActionManager {
         return sActions;
     }
 
-    public static Action getInstanceOfAction(int actionId) {
+    public static Action getInstanceOfAction(int actionId, ArrayList<String> actionArguments) {
 
         if (sContext != null) {
             for (Action x : getActions()) {
                 if (x.getActionId() == actionId)
                     try {
-                        return x.getClass().newInstance();
+                        Action newAction = x.getClass().newInstance();
+                        if (actionArguments != null) {
+                            newAction.setParameters(actionArguments);
+                        }
+                        return newAction;
                     } catch (InstantiationException e) {
                         Log.e(TAG, "getInstanceOfAction: Error creating new instance of " + x.getActionName(), e);
                         e.printStackTrace();
@@ -60,6 +66,11 @@ public class ActionManager {
         } else {
             throw new RuntimeException("ActionManager has not been initialized, please call ActionManager.initialize() first");
         }
+
+    }
+
+    public static Action getInstanceOfAction(int actionId) {
+        return getInstanceOfAction(actionId, null);
     }
 
 }

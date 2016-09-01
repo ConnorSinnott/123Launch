@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'android-apt'
 
 android {
     compileSdkVersion 24
@@ -25,11 +24,10 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:24.1.1'
     compile 'com.android.support:design:24.1.1'
-    compile 'com.jakewharton:butterknife:8.2.1'
     compile 'com.github.JakeWharton:ViewPagerIndicator:2.4.1'
     compile 'com.google.guava:guava:18.0'
     compile 'com.android.support:support-v4:24.1.1'
     compile 'com.android.support:support-vector-drawable:24.1.1'
     testCompile 'junit:junit:4.12'
-    apt 'com.jakewharton:butterknife-compiler:8.2.1'
+    compile 'org.greenrobot:eventbus:3.0.0'
 }

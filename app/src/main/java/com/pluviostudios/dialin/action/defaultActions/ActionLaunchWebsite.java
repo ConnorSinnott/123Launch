@@ -2,6 +2,7 @@ package com.pluviostudios.dialin.action.defaultActions;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,7 +12,6 @@ import android.widget.EditText;
 import com.pluviostudios.dialin.action.Action;
 import com.pluviostudios.dialin.action.ActionTools;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
-import com.pluviostudios.dialin.action.DialinImage;
 
 import java.util.ArrayList;
 
@@ -33,16 +33,15 @@ public class ActionLaunchWebsite extends Action {
     }
 
     @Override
-    public DialinImage getActionImage() {
+    public Uri getActionImageUri() {
         Intent i = (new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com")));
-        Uri preferredActionUri = ActionTools.getPrefferedApplicationIconUri(getContext(), i);
-        return new DialinImage(preferredActionUri);
+        return ActionTools.getPreferredApplicationForIntent(getContext(), i);
     }
 
     @Override
     public boolean onExecute() {
 
-        String address = getActionArguments().get(0);
+        String address = getActionParameters().get(0);
 
         if (!address.startsWith("http://") && !address.startsWith("https://"))
             address = "http://" + address;
@@ -66,15 +65,31 @@ public class ActionLaunchWebsite extends Action {
         EditText mEditText;
 
         @Override
-        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable ArrayList<String> savedActionArguments) {
+        public int getParentActionId() {
+            return 1;
+        }
+
+        @Nullable
+        @Override
+        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
             mEditText = new EditText(getContext());
             mEditText.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             mEditText.setHint("Website URL");
 
-            if (savedActionArguments != null) {
-                String currentWebsite = savedActionArguments.get(0);
+            Bundle data = null;
+            if (savedInstanceState != null && savedInstanceState.containsKey(EXTRA_PARAMETERS_ARRAY)) {
+                data = savedInstanceState;
+            } else if (getArguments() != null && getArguments().containsKey(EXTRA_PARAMETERS_ARRAY)) {
+                data = getArguments();
+            }
+
+            if (data != null) {
+
+                ArrayList<String> actionParameters = data.getStringArrayList(EXTRA_PARAMETERS_ARRAY);
+                String currentWebsite = actionParameters.get(0);
                 mEditText.setText(currentWebsite);
+
             }
 
             return mEditText;
@@ -82,7 +97,13 @@ public class ActionLaunchWebsite extends Action {
         }
 
         @Override
-        public ArrayList<String> getActionArguments() {
+        public void onSaveInstanceState(Bundle outState) {
+            outState.putStringArrayList(EXTRA_PARAMETERS_ARRAY, getActionParameters());
+            super.onSaveInstanceState(outState);
+        }
+
+        @Override
+        public ArrayList<String> getActionParameters() {
 
             ArrayList<String> out = new ArrayList<>();
             out.add(mEditText.getText().toString());

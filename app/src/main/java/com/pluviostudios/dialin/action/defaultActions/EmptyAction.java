@@ -1,9 +1,11 @@
 package com.pluviostudios.dialin.action.defaultActions;
 
+import android.net.Uri;
+
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
+import com.pluviostudios.dialin.action.ActionTools;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
-import com.pluviostudios.dialin.action.DialinImage;
 
 /**
  * Created by spectre on 8/13/16.
@@ -19,12 +21,12 @@ public class EmptyAction extends Action {
 
     @Override
     public String getActionName() {
-        return "No Action";
+        return "No Action (Click me!)";
     }
 
     @Override
-    public DialinImage getActionImage() {
-        return new DialinImage(getContext(), R.mipmap.ic_launcher);
+    public Uri getActionImageUri() {
+        return ActionTools.convertResourceToUri(getContext(), R.mipmap.ic_launcher);
     }
 
     @Override

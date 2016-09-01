@@ -1,7 +1,5 @@
 package com.pluviostudios.dialin.buttonsActivity.fragments;
 
-import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -9,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -19,12 +16,13 @@ import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
 import com.pluviostudios.dialin.action.defaultActions.EmptyAction;
 import com.pluviostudios.dialin.dialogFragments.IconListDialogFragment;
+import com.pluviostudios.dialin.dialogFragments.IconListDialogFragmentEvent;
 import com.pluviostudios.dialin.utilities.Utilities;
 
-import java.util.ArrayList;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import java.util.ArrayList;
 
 /**
  * Created by spectre on 7/27/16.
@@ -35,18 +33,17 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
     public static final String EXTRA_ACTION_ID = "extra_action_id";
     public static final String EXTRA_ACTION_ARGUMENTS = "extra_action_arguments";
 
-    protected View mRoot;
-    @BindView(R.id.fragment_edit_action_no_config) TextView mNoConfigText;
-    @BindView(R.id.fragment_edit_action_configure_frame) FrameLayout mConfigFragmentFrame;
-    @BindView(R.id.fragment_edit_action_list_item) View mEditActionListItem;
-    @BindView(R.id.list_item_action_image) ImageView mListItemActionImageView;
-    @BindView(R.id.list_item_action_text_view) TextView mListItemActionTextView;
-    @BindView(R.id.fragment_edit_action_ok) Button mButtonOk;
-    @BindView(R.id.fragment_edit_action_cancel) Button mButtonCancel;
+    public static final int DIALOG_REQUEST_CODE = 1987;
+
+    private View mRoot;
+    private TextView mNoConfigText;
+    private View mEditActionListItem;
+    private ImageView mListItemActionImageView;
+    private TextView mListItemActionTextView;
+    private Button mButtonOk;
+    private Button mButtonCancel;
 
     protected Action mAction;
-    protected ConfigurationFragment mCurrentConfigFragment;
-    protected OnActionConfigured mOnActionConfigured;
 
     public static EditActionFragment buildEditFragment() {
         EditActionFragment newFragment = new EditActionFragment();
@@ -58,7 +55,7 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
         EditActionFragment editFragment = buildEditFragment();
 
         int actionId = action.getActionId();
-        ArrayList<String> actionArguments = action.getActionArguments();
+        ArrayList<String> actionArguments = action.getActionParameters();
 
         Bundle extras = new Bundle();
         extras.putInt(EXTRA_ACTION_ID, actionId);
@@ -70,26 +67,45 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
 
     }
 
+    private void initialize() {
+        mNoConfigText = (TextView) mRoot.findViewById(R.id.fragment_edit_action_no_config);
+        mEditActionListItem = mRoot.findViewById(R.id.fragment_edit_action_list_item);
+        mListItemActionImageView = (ImageView) mRoot.findViewById(R.id.list_item_action_image);
+        mListItemActionTextView = (TextView) mRoot.findViewById(R.id.list_item_action_text_view);
+        mButtonOk = (Button) mRoot.findViewById(R.id.fragment_edit_action_ok);
+        mButtonCancel = (Button) mRoot.findViewById(R.id.fragment_edit_action_cancel);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mRoot = inflater.inflate(R.layout.fragment_edit_action, container, false);
-        ButterKnife.bind(this, mRoot);
+        initialize();
 
-        Bundle extras = getArguments();
+        Bundle extras = null;
+        if (savedInstanceState != null) {
+            extras = savedInstanceState;
+        } else {
+            if (getArguments() != null) {
+                extras = getArguments();
+            }
+        }
+
         if (extras != null) {
 
             // If there are extras it means that an Action info was passed
             Utilities.checkBundleForExpectedExtras(extras,
-                    EXTRA_ACTION_ID,
-                    EXTRA_ACTION_ARGUMENTS);
+                    EXTRA_ACTION_ID
+            );
 
-            // Get the action information: id and arguments
+            // Get the actionID and create an instance of the action
             int actionId = extras.getInt(EXTRA_ACTION_ID);
-            ArrayList<String> actionArguments = extras.getStringArrayList(EXTRA_ACTION_ARGUMENTS);
-
-            // And recreate the action using these parameters
             mAction = ActionManager.getInstanceOfAction(actionId);
-            mAction.setActionArguments(actionArguments);
+
+            // Add arguments if they exist
+            if (extras.containsKey(EXTRA_ACTION_ARGUMENTS)) {
+                ArrayList<String> actionArguments = extras.getStringArrayList(EXTRA_ACTION_ARGUMENTS);
+                mAction.setParameters(actionArguments);
+            }
 
         } else {
 
@@ -109,45 +125,90 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
 
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (mAction != null) {
+            outState.putInt(EXTRA_ACTION_ID, mAction.getActionId());
+        }
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
     private void updateCurrentAction() {
 
+        // Update the header with action name and icon
         mListItemActionTextView.setText(mAction.getActionName());
-        mListItemActionImageView.setImageURI(mAction.getActionImage().getImageUri());
+        mListItemActionImageView.setImageURI(mAction.getActionImageUri());
 
-        // If the action has a configuration fragment, now would be the time to show it
-        if (mAction.hasConfigurationFragment()) {
 
-            // Display the configuration frame
-            mNoConfigText.setVisibility(View.GONE);
-
-            // Place configuration fragment into frame
-            mCurrentConfigFragment = mAction.getConfigurationFragment();
-            getFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_edit_action_configure_frame, mCurrentConfigFragment, mCurrentConfigFragment.TAG)
-                    .commit();
-
+        // If the action does not have a configuration fragment, than delete the currently displayed fragment, it does not belong there anymore
+        if (!mAction.hasConfigurationFragment()) {
+            clearConfigFragment();
         } else {
 
-            // Otherwise clear the configuration fragment if one is visible
-            if (mCurrentConfigFragment != null) {
-                getFragmentManager().beginTransaction().remove(mCurrentConfigFragment).commit();
-                mNoConfigText.setVisibility(View.VISIBLE);
-                mCurrentConfigFragment = null;
+            // Otherwise, there should be a fragment being displayed, so clear up the frame
+            mNoConfigText.setVisibility(View.GONE);
+
+            // Get the currently displayed configuration fragment if it exists
+            ConfigurationFragment currentlyDisplayedFragment = (ConfigurationFragment) getChildFragmentManager().findFragmentById(R.id.fragment_edit_action_configure_frame);
+
+            // If there is currently a configuration fragment being displayed, determine if it belongs to the action
+            if (currentlyDisplayedFragment != null) {
+
+                // Check to see if the fragment being displayed belongs to the action, or if it exists because the user was looking at a different action
+                if (currentlyDisplayedFragment.getParentActionId() != mAction.getActionId()) {
+                    displayNewConfigFragment();
+                } else {
+                    mAction.setConfigurationFragment(currentlyDisplayedFragment);
+                }
+
+            } else {
+                displayNewConfigFragment();
             }
 
         }
 
     }
 
-    @Override
-    public void onAttach(Context context) {
+    private void displayNewConfigFragment() {
 
-        if (!(context instanceof OnActionConfigured))
-            throw new RuntimeException("Parent activity should implement " + OnActionConfigured.class.getCanonicalName());
+        // If there is a different fragment being displayed, create the new configuration fragment
+        ConfigurationFragment newConfigurationFragment = mAction.getConfigurationFragment();
 
-        mOnActionConfigured = (OnActionConfigured) context;
+        if (getArguments() != null) {
+            if (getArguments().containsKey(EXTRA_ACTION_ID) && mAction.getActionId() == getArguments().getInt(EXTRA_ACTION_ID)) {
+                if (getArguments().containsKey(EXTRA_ACTION_ARGUMENTS)) {
+                    newConfigurationFragment.setActionParameters(getArguments().getStringArrayList(EXTRA_ACTION_ARGUMENTS));
+                }
+            }
+        }
 
-        super.onAttach(context);
+        getChildFragmentManager().beginTransaction()
+                .replace(R.id.fragment_edit_action_configure_frame, newConfigurationFragment)
+                .commit();
+
+    }
+
+    private void clearConfigFragment() {
+
+        Fragment currentFragment = getChildFragmentManager().findFragmentById(R.id.fragment_edit_action_configure_frame);
+
+        if (currentFragment != null) {
+            mNoConfigText.setVisibility(View.VISIBLE);
+            getChildFragmentManager().beginTransaction().remove(currentFragment).commit();
+            getChildFragmentManager().popBackStack();
+        }
 
     }
 
@@ -157,79 +218,42 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
         switch (view.getId()) {
             case R.id.fragment_edit_action_ok:
 
-                // If the currentAction has been changed from the default action with id -1
-                if (mAction.getActionId() >= 0) {
-
-                    mAction.saveArguments();
-
-                    // On OK return the configured fragment using OnActionConfigured
-                    if (mOnActionConfigured != null) {
-                        mOnActionConfigured.onActionConfigured(mAction);
-                    }
-
-                } else {
-
-                    // Otherwise consider this a cancellation
-
-                    if (mOnActionConfigured != null) {
-                        mOnActionConfigured.onConfigurationCancelled();
-                    }
-
-                }
+                // On OK return the configured fragment using OnActionConfigured
+                mAction.saveParameters();
+                EventBus.getDefault().post(new EditActionFragmentEvents.Outgoing.OnConfigured(mAction));
 
                 break;
 
             case R.id.fragment_edit_action_cancel:
-
-                // On Cancel, notify mOnActionConfigured
-                if (mOnActionConfigured != null) {
-                    mOnActionConfigured.onConfigurationCancelled();
-                }
+                EventBus.getDefault().post(new EditActionFragmentEvents.Outgoing.OnCancel());
                 break;
 
             case R.id.fragment_edit_action_list_item:
 
-                // Todo because we are not using onAttach anymore, save the restore the onClick manually in onStart
+                IconListDialogFragment.Builder builder = new IconListDialogFragment.Builder(DIALOG_REQUEST_CODE);
+                for (Action x : ActionManager.getActions()) {
+                    builder.addItem(x.getActionName(), x.getActionImageUri());
+                }
+                builder.build().show(getFragmentManager(), IconListDialogFragment.TAG);
 
-                // Get a list of all available actions and display them using a IconListDialogFragment
-                IconListDialogFragment<Action> listDialogFragment = new IconListDialogFragment();
-
-                listDialogFragment.setItems(ActionManager.getActions());
-
-                listDialogFragment.setItemAdapter(new IconListDialogFragment.IconListDialogItemAdapter<Action>() {
-                    @Override
-                    public String getString(Action object) {
-                        return object.getActionName();
-                    }
-
-                    @Override
-                    public Uri getImageUri(Action object) {
-                        return object.getActionImage().getImageUri();
-                    }
-                });
-
-                listDialogFragment.setOnListItemSelected(new IconListDialogFragment.OnListItemSelected<Action>() {
-                    @Override
-                    public void onListItemSelected(Action object, int position) {
-
-                        // On item selected, get a new instance of the action so the list objects remain in tact
-                        mAction = ActionManager.getInstanceOfAction(object.getActionId());
-                        updateCurrentAction();
-
-                    }
-                });
-
-                listDialogFragment.show(getFragmentManager(), IconListDialogFragment.TAG);
                 break;
 
         }
 
     }
 
-    public interface OnActionConfigured {
-        void onActionConfigured(Action action);
+    @Subscribe
+    public void onIconListDialogFragmentEvent(IconListDialogFragmentEvent event) {
 
-        void onConfigurationCancelled();
+        if (event.requestCode == DIALOG_REQUEST_CODE) {
+
+            // On item selected, get a new instance of the action so the list objects remain in tact
+            int actionId = ActionManager.getActions().get(event.position).getActionId();
+            mAction = ActionManager.getInstanceOfAction(actionId);
+            updateCurrentAction();
+
+        }
+
     }
 
 }

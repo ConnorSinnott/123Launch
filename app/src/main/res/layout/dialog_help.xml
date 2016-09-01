@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="
+        Welcome! This is the configuration screen for the widget. Here you will set up the shortcuts that the widget will use.
+        \n \n
+        Behind this obstructive dialog, you will notice several buttons above. One of these buttons has an arrow, this is the 'launch' button.
+        \n \n
+        With the exception of the launch button, you may click and hold any of the buttons to assign an action.
+        \n \n
+        Once an action has been assigned, clicking that button will move the action to the 'launch' button.
+        \n \n
+        You might notice that, upon clicking a button, any other actions which have been assigned disappear.
+        \n \n
+        The idea behind 123Go, is that every button has more buttons behind it. The other actions have not disappeared, you have just moved 'deeper' into the tree. This allows for an infinite amount of actions!
+        \n \n
+        Press the launch button while it is has an action to execute that action. Or, press it while it is empty to return to the first level.
+        \n \n
+        Once you are done, press the 'Done' button below to save your new configuration. Then, when you place the 123Go widget on your homescreen, select this as your configuration.
+        \n \n
+        "
+            android:textSize="18sp"/>
+
+    </ScrollView>
+
+</LinearLayout>

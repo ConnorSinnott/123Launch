@@ -6,9 +6,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.RemoteViews;
 
+import com.google.common.primitives.Ints;
+import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.buttonIconSet.ButtonIconSet;
 import com.pluviostudios.dialin.buttonIconSet.ButtonIconSetManager;
 import com.pluviostudios.dialin.data.Node;
@@ -62,6 +65,10 @@ public class WidgetManager {
 
     }
 
+    public static void updateWidgets(Context context, ArrayList<Integer> appWidgetIds) {
+        updateWidgets(context, Ints.toArray(appWidgetIds));
+    }
+
     /**
      * Queries the database and updates the provided appWidgetIds using their current path and configuration
      *
@@ -69,6 +76,8 @@ public class WidgetManager {
      * @param appWidgetIds The appWidgetIds to be updated
      */
     public static void updateWidgets(Context context, int... appWidgetIds) {
+
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
 
         // For each passed appWidgetId
         for (int appWidgetId : appWidgetIds) {
@@ -97,6 +106,9 @@ public class WidgetManager {
                     int buttonCount = c.getInt(2);
                     int launchButtonIndex = c.getInt(3);
 
+                    Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
+                    boolean isVertical = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH) > options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT);
+
                     // Convert the rawPath (Ex. "0 2 1") into an ArrayList (essentially String.split(" ") )
                     ArrayList<Integer> path = convertStringToPath(rawPath);
 
@@ -104,11 +116,16 @@ public class WidgetManager {
                     Node previewNode = StorageManager.loadNodeForWidget(context, configId, path);
 
                     // Generate the remoteViews using the previewNode
-                    RemoteViews views = generateRemoteViewsFromNode(context, appWidgetId, previewNode, buttonCount, launchButtonIndex);
+                    RemoteViews views = generateRemoteViewsFromNode(context, appWidgetId, buttonCount, launchButtonIndex, isVertical, previewNode);
 
                     // Update the widget
-                    AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
                     appWidgetManager.updateAppWidget(appWidgetId, views);
+
+                } else {
+
+                    // Configuration is missing
+                    RemoteViews view = new RemoteViews(context.getPackageName(), R.layout.widget_config_missing);
+                    appWidgetManager.updateAppWidget(appWidgetId, view);
 
                 }
                 c.close();
@@ -184,11 +201,11 @@ public class WidgetManager {
         }
     }
 
-    private static RemoteViews generateRemoteViewsFromNode(Context context, int appWidgetId, Node node, int buttonCount, int launchButtonIndex) {
+    private static RemoteViews generateRemoteViewsFromNode(Context context, int appWidgetId, int buttonCount, int launchButtonIndex, boolean vertical, Node node) {
 
         ArrayList<Integer> buttonIds = SupportedWidgetSizes.getWidgetButtonIds(buttonCount);
         ArrayList<Integer> backgroundIds = SupportedWidgetSizes.getWidgetButtonBackgroundIds(buttonCount);
-        RemoteViews remoteViews = SupportedWidgetSizes.getWidgetRemoteView(context, buttonCount);
+        RemoteViews remoteViews = SupportedWidgetSizes.getWidgetRemoteView(context, buttonCount, vertical);
 
         ButtonIconSet buttonIconSet = ButtonIconSetManager.getButtonIconSet(context, buttonCount);
 
@@ -203,7 +220,7 @@ public class WidgetManager {
 
                 // Set icon
                 if (node.hasAction()) {
-                    remoteViews.setImageViewUri(buttonIds.get(i), node.getAction().getActionImage().getImageUri());
+                    remoteViews.setImageViewUri(buttonIds.get(i), node.getAction().getActionImageUri());
                 } else {
                     remoteViews.setImageViewBitmap(buttonIds.get(i), null);
                 }
@@ -212,7 +229,7 @@ public class WidgetManager {
                 remoteViews.setInt(buttonIds.get(i), "setBackgroundResource", buttonIconSet.getButtonHighlightStateDrawableResourceId());
 
                 // Set background
-                remoteViews.setImageViewUri(backgroundIds.get(i), buttonIconSet.getLauncher());
+                remoteViews.setImageViewUri(backgroundIds.get(i), buttonIconSet.getLauncherUri());
 
                 remoteViews.setOnClickPendingIntent(buttonIds.get(i), generateButtonPendingIntent(context, appWidgetId, -1));
 
@@ -222,7 +239,7 @@ public class WidgetManager {
 
                 // Set icon
                 if (childNode.hasAction()) {
-                    remoteViews.setImageViewUri(buttonIds.get(i), childNode.getAction().getActionImage().getImageUri());
+                    remoteViews.setImageViewUri(buttonIds.get(i), childNode.getAction().getActionImageUri());
                 } else {
                     remoteViews.setImageViewBitmap(buttonIds.get(i), null);
                 }

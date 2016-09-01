@@ -5,40 +5,42 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.pluviostudios.dialin.R;
-import com.pluviostudios.dialin.action.ActionManager;
+import com.pluviostudios.dialin.action.ActionTools;
+import com.pluviostudios.dialin.utilities.Utilities;
 
+import org.greenrobot.eventbus.EventBus;
+
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 /**
- * Created by spectre on 8/1/16.
+ * Created by spectre on 8/19/16.
  */
-public class IconListDialogFragment<T> extends DialogFragment {
+public class IconListDialogFragment extends DialogFragment {
 
     public static final String TAG = "IconListDialogFragment";
 
-    private View mRoot;
-    @BindView(R.id.dialog_fragment_action_list_list_view) ListView mListView;
+    public static final String EXTRA_REQUEST_CODE = "extra_request_code";
+    public static final String EXTRA_TITLE_LIST = "extra_title_list";
+    public static final String EXTRA_URI_LIST = "extra_uri_list";
 
-    private ArrayList<T> objectList;
-    private Integer mSelected;
+    private int requestCode;
+    private ArrayList<String> titleList;
+    private ArrayList<Uri> uriList;
+
     private boolean isDialog = false;
-    protected OnListItemSelected mOnListItemSelected;
-    protected IconListDialogItemAdapter mItemAdapter;
 
     @NonNull
     @Override
@@ -47,59 +49,65 @@ public class IconListDialogFragment<T> extends DialogFragment {
         return super.onCreateDialog(savedInstanceState);
     }
 
-    public void setItems(ArrayList<T> objectList) {
-        this.objectList = objectList;
-    }
-
-    public void setSelected(int position) {
-        mSelected = position;
-    }
-
+    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mRoot = inflater.inflate(R.layout.dialog_fragment_action_list, container, false);
-        ButterKnife.bind(this, mRoot);
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        mListView.setAdapter(new DialogListAdapter(ActionManager.getContext(), objectList));
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        ListView listView = new ListView(getContext());
+        listView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+        Utilities.checkBundleForExpectedExtras(getArguments(),
+                EXTRA_REQUEST_CODE,
+                EXTRA_TITLE_LIST,
+                EXTRA_URI_LIST);
+
+        requestCode = getArguments().getInt(EXTRA_REQUEST_CODE);
+        titleList = getArguments().getStringArrayList(EXTRA_TITLE_LIST);
+        uriList = getArguments().getParcelableArrayList(EXTRA_URI_LIST);
+
+        if (titleList.size() != uriList.size())
+            throw new RuntimeException("TitleList count differs from UriList count");
+
+        listView.setAdapter(new IconListDialogAdapter());
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-                if (mOnListItemSelected != null) {
-
-                    mOnListItemSelected.onListItemSelected(objectList.get(i), i);
-                    mSelected = i;
-                    view.setSelected(true);
-
-                }
+                EventBus.getDefault().post(new IconListDialogFragmentEvent(requestCode, i));
                 if (isDialog) {
                     dismiss();
                 }
             }
         });
-        return mRoot;
+
+        return listView;
 
     }
 
-    private class DialogListAdapter extends ArrayAdapter<T> {
+    private class IconListDialogAdapter extends BaseAdapter {
 
-        public DialogListAdapter(Context context, List<T> objects) {
-            super(context, R.layout.list_item_action, objects);
+        @Override
+        public int getCount() {
+            return titleList.size();
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return null;
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return i;
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
 
             if (convertView == null)
-                convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_action, null);
+                convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_action, parent, false);
 
-            if (mItemAdapter == null)
-                throw new RuntimeException("Missing ItemAdapter");
-
-            T currObject = getItem(position);
-
-            Uri displayUri = mItemAdapter.getImageUri(currObject);
-            String displayName = mItemAdapter.getString(currObject);
+            Uri displayUri = uriList.get(position);
+            String displayName = titleList.get(position);
 
             ((ImageView) convertView.findViewById(R.id.list_item_action_image)).setImageURI(displayUri);
             ((TextView) convertView.findViewById(R.id.list_item_action_text_view)).setText(displayName);
@@ -107,26 +115,47 @@ public class IconListDialogFragment<T> extends DialogFragment {
             return convertView;
 
         }
-    }
-
-    public interface OnListItemSelected<T> {
-        void onListItemSelected(T object, int position);
-    }
-
-    public interface IconListDialogItemAdapter<T> {
-
-        String getString(T object);
-
-        Uri getImageUri(T object);
 
     }
 
-    public void setOnListItemSelected(OnListItemSelected<T> onListItemSelected) {
-        mOnListItemSelected = onListItemSelected;
-    }
+    /**
+     * Created by spectre on 8/19/16.
+     */
+    public static class Builder {
 
-    public void setItemAdapter(IconListDialogItemAdapter<T> itemAdapter) {
-        mItemAdapter = itemAdapter;
-    }
+        public static final String TAG = "IconListDataGenerator";
 
+        final int requestCode;
+        ArrayList<String> titlesList = new ArrayList<>();
+        ArrayList<Uri> uriList = new ArrayList<>();
+        ArrayList<Serializable> mSerializableArrayList = new ArrayList<>();
+
+        public Builder(int requestCode) {
+            this.requestCode = requestCode;
+        }
+
+        public Builder addItem(String title, Uri imageUri) {
+            titlesList.add(title);
+            uriList.add(imageUri);
+            mSerializableArrayList.add(null);
+            return this;
+        }
+
+        public Builder addItem(String title, Context context, int resourceId) {
+            return addItem(title, ActionTools.convertResourceToUri(context, resourceId));
+        }
+
+        public IconListDialogFragment build() {
+
+            IconListDialogFragment iconListDialogFragment2 = new IconListDialogFragment();
+            Bundle extras = new Bundle();
+            extras.putInt(EXTRA_REQUEST_CODE, requestCode);
+            extras.putStringArrayList(EXTRA_TITLE_LIST, titlesList);
+            extras.putParcelableArrayList(EXTRA_URI_LIST, uriList);
+            iconListDialogFragment2.setArguments(extras);
+            return iconListDialogFragment2;
+
+        }
+
+    }
 }

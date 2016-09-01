@@ -1,6 +1,7 @@
 package com.pluviostudios.dialin.action;
 
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -12,14 +13,14 @@ public abstract class Action {
 
     public static final String TAG = "Action";
 
-    private ArrayList<String> mActionArguments;
+    private ArrayList<String> mActionParameters;
     private ConfigurationFragment mConfigurationFragment;
 
     public abstract int getActionId();
 
     public abstract String getActionName();
 
-    public abstract DialinImage getActionImage();
+    public abstract Uri getActionImageUri();
 
     public boolean hasConfigurationFragment() {
         return buildConfigurationFragment() != null;
@@ -38,28 +39,33 @@ public abstract class Action {
         }
     }
 
+    public void setConfigurationFragment(ConfigurationFragment configurationFragment) {
+        mConfigurationFragment = configurationFragment;
+    }
+
     public ConfigurationFragment getConfigurationFragment() {
         if (mConfigurationFragment == null) {
             mConfigurationFragment = buildConfigurationFragment();
-            if (mActionArguments != null) {
-                mConfigurationFragment.setActionArguments(mActionArguments);
+            if (mActionParameters != null) {
+                mConfigurationFragment.setActionParameters(mActionParameters);
             }
         }
         return mConfigurationFragment;
     }
 
-    public void saveArguments() {
+    public boolean saveParameters() {
         if (hasConfigurationFragment() && mConfigurationFragment != null) {
-            setActionArguments(getConfigurationFragment().getActionArguments());
+            setParameters(getConfigurationFragment().getActionParameters());
         }
+        return mActionParameters != null;
     }
 
-    public void setActionArguments(ArrayList<String> actionArguments) {
-        this.mActionArguments = actionArguments;
+    public void setParameters(ArrayList<String> actionArguments) {
+        this.mActionParameters = actionArguments;
     }
 
-    public ArrayList<String> getActionArguments() {
-        return mActionArguments;
+    public ArrayList<String> getActionParameters() {
+        return mActionParameters;
     }
 
     protected Context getContext() {

@@ -1,9 +1,10 @@
 package com.pluviostudios.dialin.buttonIconSet;
 
 import android.content.Context;
+import android.net.Uri;
 
 import com.pluviostudios.dialin.R;
-import com.pluviostudios.dialin.action.DialinImage;
+import com.pluviostudios.dialin.action.ActionTools;
 
 /**
  * Created by spectre on 8/6/16.
@@ -14,10 +15,10 @@ public class ButtonIconSetManager {
 
     public static ButtonIconSet getButtonIconSet(Context context, int buttonCount) {
 
-        final DialinImage bBlue = new DialinImage(context, R.drawable.ic_bblue);
-        final DialinImage bGreen = new DialinImage(context, R.drawable.ic_bgreen);
-        final DialinImage bPurple = new DialinImage(context, R.drawable.ic_bpurp);
-        final DialinImage bLaunch = new DialinImage(context, R.drawable.ic_blaunch);
+        final Uri bBlue = ActionTools.convertResourceToUri(context, R.drawable.ic_bblue);
+        final Uri bGreen = ActionTools.convertResourceToUri(context, R.drawable.ic_bgreen);
+        final Uri bPurple = ActionTools.convertResourceToUri(context, R.drawable.ic_bpurp);
+        final Uri bLaunch = ActionTools.convertResourceToUri(context, R.drawable.ic_blaunch);
 
         switch (buttonCount) {
             case 4:

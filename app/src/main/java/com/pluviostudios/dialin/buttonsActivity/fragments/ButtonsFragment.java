@@ -1,10 +1,10 @@
 package com.pluviostudios.dialin.buttonsActivity.fragments;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -15,9 +15,12 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.pluviostudios.dialin.action.DialinImage;
 import com.pluviostudios.dialin.buttonIconSet.ButtonIconSet;
+import com.pluviostudios.dialin.buttonIconSet.ButtonIconSetManager;
 import com.pluviostudios.dialin.utilities.Utilities;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 /**
  * Created by spectre on 7/26/16.
@@ -25,32 +28,46 @@ import com.pluviostudios.dialin.utilities.Utilities;
 public class ButtonsFragment extends Fragment implements View.OnClickListener, View.OnLongClickListener {
 
     public static final String TAG = "ButtonsFragment";
-    private static final String EXTRA_COUNT = "extra_count";
-    private static final String EXTRA_BUTTON_SET = "extra_button_set";
+
+    public static final String EXTRA_COUNT = "extra_count";
     public static final String EXTRA_LAUNCH_BUTTON_INDEX = "extra_launch_button_index";
+    public static final String EXTRA_LAUNCH_ICON_URI = "extra_launch_icon_uri";
+    public static final String EXTRA_CHILD_ICON_URIS = "extra_child_icon_uris";
+
+    public static final String SAVED_HOLD_POSITION = "saved_hold_position";
+    public static final String SAVED_ICONS_EXIST = "saved_icons_exit";
 
     private LinearLayout mRoot;
     private ImageButton mLauncherButton;
     private ImageButton[] mChildrenButtons;
 
     private ButtonIconSet mButtonIconSet;
-    private DialinImage mLauncherIcon;
-    private DialinImage[] mChildrenIcons;
+    private Uri mLauncherIcon;
+    private Uri[] mChildrenIcons;
 
-    private int mButtonCount;
     private Integer mHoldIndex;
-    private int mLaunchButtonIndex;
-    private boolean mIconsPending = false;
 
-    protected OnButtonsFragmentButtonClicked mOnButtonsFragmentButtonClicked;
-
-    public static ButtonsFragment buildButtonsFragment(int count, ButtonIconSet buttonIconSet) {
+    public static ButtonsFragment buildButtonsFragment(int count) {
         ButtonsFragment fragment = new ButtonsFragment();
         Bundle extras = new Bundle();
         extras.putInt(EXTRA_COUNT, count);
-        extras.putSerializable(EXTRA_BUTTON_SET, buttonIconSet);
         fragment.setArguments(extras);
         return fragment;
+    }
+
+    public static ButtonsFragment buildButtonsFragment(int count, Uri launcherIcon, Uri[] childrenIcons) {
+        ButtonsFragment buttonsFragment = buildButtonsFragment(count);
+        Bundle extras = buttonsFragment.getArguments();
+
+        if (launcherIcon != null) {
+            extras.putParcelable(EXTRA_LAUNCH_ICON_URI, launcherIcon);
+        }
+
+        if (childrenIcons != null) {
+            extras.putParcelableArray(EXTRA_CHILD_ICON_URIS, childrenIcons);
+        }
+
+        return buttonsFragment;
     }
 
     @Override
@@ -58,18 +75,19 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
         // Throw exceptions if we are missing expected extras
         Bundle extras = getArguments();
+
         Utilities.checkBundleForExpectedExtras(extras,
-                EXTRA_COUNT,
-                EXTRA_BUTTON_SET);
+                EXTRA_COUNT
+        );
 
         // Set button count and determine launch index
-        mButtonCount = extras.getInt(EXTRA_COUNT);
+        int buttonCount = extras.getInt(EXTRA_COUNT);
 
         // Add support for launch on left
-        mLaunchButtonIndex = extras.getInt(EXTRA_LAUNCH_BUTTON_INDEX, mButtonCount - 1);
+        int launchButtonIndex = extras.getInt(EXTRA_LAUNCH_BUTTON_INDEX, buttonCount - 1);
 
         // Get the passed ButtonIconSet
-        mButtonIconSet = (ButtonIconSet) extras.getSerializable(EXTRA_BUTTON_SET);
+        mButtonIconSet = ButtonIconSetManager.getButtonIconSet(getContext(), buttonCount);
 
         // Generate the button view
         mRoot = new LinearLayout(getContext());
@@ -77,9 +95,9 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
         mRoot.setOrientation(LinearLayout.HORIZONTAL);
         mRoot.setGravity(Gravity.CENTER);
 
-        mChildrenButtons = new ImageButton[mButtonCount - 1];
+        mChildrenButtons = new ImageButton[buttonCount - 1];
         boolean launchPlaced = false;
-        for (int i = 0; i < mButtonCount; i++) {
+        for (int i = 0; i < buttonCount; i++) {
 
             FrameLayout buttonFrameLayout;
             int relativeChildIndex = i - (launchPlaced ? 1 : 0);
@@ -87,11 +105,13 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
             ImageButton newImageButton;
 
             // Determine which buttons get launcher icons vs standard icons
-            if (i == mLaunchButtonIndex) {
+            if (i == launchButtonIndex) {
+
                 launchPlaced = true;
                 buttonFrameLayout = generateLaunchButton(getContext(), mButtonIconSet);
 
                 newImageButton = (ImageButton) buttonFrameLayout.findViewWithTag("ImageButton");
+                newImageButton.setId(i);
                 newImageButton.setTag(-1);
 
                 mLauncherButton = newImageButton;
@@ -102,6 +122,7 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
                 newImageButton = (ImageButton) buttonFrameLayout.findViewWithTag("ImageButton");
                 newImageButton.setTag(relativeChildIndex);
+                newImageButton.setId(i);
 
                 mChildrenButtons[relativeChildIndex] = newImageButton;
 
@@ -114,20 +135,75 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
         }
 
-        // If there are cached icons waiting to be displayed, display them
-        if (mIconsPending) {
-            mIconsPending = false;
-            updateIcons();
+        // If savedInstanceState is not null, override the icons saved in init bundle with saved instance state
+        if (savedInstanceState != null && savedInstanceState.getBoolean(SAVED_ICONS_EXIST)) {
+
+            if (savedInstanceState.containsKey(EXTRA_LAUNCH_ICON_URI)) {
+                mLauncherIcon = savedInstanceState.getParcelable(EXTRA_LAUNCH_ICON_URI);
+            }
+
+            if (savedInstanceState.containsKey(EXTRA_CHILD_ICON_URIS)) {
+                mChildrenIcons = (Uri[]) savedInstanceState.getParcelableArray(EXTRA_CHILD_ICON_URIS);
+            }
+
+        } else {
+
+            if (extras.containsKey(EXTRA_LAUNCH_ICON_URI)) {
+                mLauncherIcon = extras.getParcelable(EXTRA_LAUNCH_ICON_URI);
+            }
+
+            if (extras.containsKey(EXTRA_CHILD_ICON_URIS)) {
+                mChildrenIcons = (Uri[]) extras.getParcelableArray(EXTRA_CHILD_ICON_URIS);
+            }
+
+        }
+
+        updateIcons();
+
+        if (savedInstanceState != null && savedInstanceState.containsKey(SAVED_HOLD_POSITION)) {
+            setHoldOnButton(savedInstanceState.getInt(SAVED_HOLD_POSITION));
         }
 
         return mRoot;
 
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+        if (mHoldIndex != null) {
+            outState.putInt(SAVED_HOLD_POSITION, mHoldIndex);
+        }
+
+        outState.putBoolean(SAVED_ICONS_EXIST, mLauncherIcon != null || mChildrenIcons != null);
+
+        if (mLauncherIcon != null) {
+            outState.putParcelable(EXTRA_LAUNCH_ICON_URI, mLauncherIcon);
+        }
+
+        if (mChildrenIcons != null) {
+            outState.putParcelableArray(EXTRA_CHILD_ICON_URIS, mChildrenIcons);
+        }
+
+        super.onSaveInstanceState(outState);
+
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
     private static FrameLayout generateButtonFrameLayout(Context context, int buttonHighlightResourceId) {
 
         // Determine Button Size
-        // Todo find a better way to determine button width
         final int buttonSize = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 70, context.getResources().getDisplayMetrics()));
 
         // For placing ImageView under ImageButton
@@ -164,102 +240,27 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
     private static FrameLayout generateLaunchButton(Context context, ButtonIconSet buttonIconSet) {
         FrameLayout generatedButton = generateButtonFrameLayout(context, buttonIconSet.getButtonHighlightStateDrawableResourceId());
         ImageView backgroundImageView = (ImageView) generatedButton.findViewWithTag("BackgroundImageView");
-        backgroundImageView.setImageURI(buttonIconSet.getLauncher());
+        backgroundImageView.setImageURI(buttonIconSet.getLauncherUri());
         return generatedButton;
-    }
-
-    public void setOnButtonsFragmentButtonClicked(OnButtonsFragmentButtonClicked onButtonsFragmentButtonClicked) {
-        mOnButtonsFragmentButtonClicked = onButtonsFragmentButtonClicked;
     }
 
     private void updateIcons() {
 
-        // If the fragment is visible to the user
-        if (isAdded()) {
+        if (mLauncherIcon != null) {
+            mLauncherButton.setImageURI(mLauncherIcon);
+        } else {
+            mLauncherButton.setImageBitmap(null);
+        }
 
-            if (mLauncherIcon != null) {
-                mLauncherButton.setImageURI(mLauncherIcon.getImageUri());
-            } else {
-                mLauncherButton.setImageBitmap(null);
-            }
-
+        if (mChildrenIcons != null) {
             for (int i = 0; i < mChildrenIcons.length; i++) {
                 if (mChildrenIcons[i] != null) {
-                    mChildrenButtons[i].setImageURI(mChildrenIcons[i].getImageUri());
+                    mChildrenButtons[i].setImageURI(mChildrenIcons[i]);
                 } else {
                     mChildrenButtons[i].setImageBitmap(null);
                 }
             }
-
-        } else {
-            // Otherwise flag this fragment to update widgets on attach
-            mIconsPending = true;
         }
-
-    }
-
-    public void setIcons(DialinImage launcherIcon, DialinImage[] childrenIcons) {
-        mLauncherIcon = launcherIcon;
-        mChildrenIcons = childrenIcons;
-        updateIcons();
-    }
-
-    @Override
-    public void onClick(View view) {
-
-
-        // Which button was clicked. -1 if Launch
-        int buttonIndex = (int) view.getTag();
-
-        Log.d(TAG, "onClick: " + buttonIndex);
-
-        if (mOnButtonsFragmentButtonClicked != null) {
-
-            if (buttonIndex >= 0) {
-
-                // Standard button was clicked
-                mOnButtonsFragmentButtonClicked.onButtonClicked(buttonIndex);
-
-            } else {
-
-                // Launch button was clicked
-                mOnButtonsFragmentButtonClicked.onLaunchButtonClicked();
-
-            }
-
-            clearHold();
-
-        }
-
-    }
-
-    @Override
-    public boolean onLongClick(View view) {
-
-        // Which button was clicked
-        int buttonIndex = (int) view.getTag();
-
-        if (mOnButtonsFragmentButtonClicked != null) {
-
-            // Alert the listener
-            if (buttonIndex >= 0) {
-
-                // Standard button was long clicked
-                mOnButtonsFragmentButtonClicked.onButtonLongClicked(buttonIndex);
-
-                // Set hold image
-                setHoldOnButton(buttonIndex);
-
-            } else {
-
-                // Consider this a launch button click
-                mOnButtonsFragmentButtonClicked.onLaunchButtonClicked();
-
-            }
-
-        }
-
-        return true; // Do not propagate up
 
     }
 
@@ -275,22 +276,76 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
     }
 
-    public void clearHold() {
-
+    private void clearHold() {
         // Reset hold image
         if (mHoldIndex != null) {
             mChildrenButtons[mHoldIndex].setBackgroundResource(mButtonIconSet.getButtonHighlightStateDrawableResourceId());
             mHoldIndex = null;
         }
+    }
+
+    @Subscribe
+    public void onButtonsFragmentUpdateEvent(ButtonFragmentEvents.Incoming.ButtonsFragmentUpdateEvent event) {
+
+        mLauncherIcon = event.launcherImage;
+        mChildrenIcons = event.childImages;
+        updateIcons();
 
     }
 
-    public interface OnButtonsFragmentButtonClicked {
-        void onButtonClicked(int index);
+    @Subscribe
+    public void onButtonsFragmentClearHoldEvent(ButtonFragmentEvents.Incoming.ButtonsFragmentClearHoldEvent event) {
+        clearHold();
+    }
 
-        void onButtonLongClicked(int index);
+    @Override
+    public void onClick(View view) {
 
-        void onLaunchButtonClicked();
+        // Which button was clicked. -1 if Launch
+        int buttonIndex = (int) view.getTag();
+
+        if (buttonIndex >= 0) {
+
+            // Standard button was clicked
+            EventBus.getDefault().post(new ButtonFragmentEvents.Outgoing.ClickEvent(buttonIndex));
+
+        } else {
+
+            // Launch button was clicked
+            EventBus.getDefault().post(new ButtonFragmentEvents.Outgoing.LaunchClickEvent());
+
+        }
+
+        clearHold();
+
+
+    }
+
+    @Override
+    public boolean onLongClick(View view) {
+
+        // Which button was clicked
+        int buttonIndex = (int) view.getTag();
+
+
+        // Alert the listener
+        if (buttonIndex >= 0) {
+
+            // Standard button was long clicked
+            EventBus.getDefault().post(new ButtonFragmentEvents.Outgoing.LongClickEvent(buttonIndex));
+
+            // Set hold image
+            setHoldOnButton(buttonIndex);
+
+        } else {
+
+            // Consider this a launch button click
+            EventBus.getDefault().post(new ButtonFragmentEvents.Outgoing.LaunchClickEvent());
+
+        }
+
+        return true; // Do not propagate up
+
     }
 
 }

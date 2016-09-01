@@ -2,35 +2,31 @@ package com.pluviostudios.dialin.buttonIconSet;
 
 import android.net.Uri;
 
-import com.pluviostudios.dialin.action.DialinImage;
-
-import java.io.Serializable;
-
 /**
  * Created by spectre on 8/4/16.
  */
-public class ButtonIconSet implements Serializable {
+public class ButtonIconSet {
 
     public static final String TAG = "ButtonIconSet";
 
-    private DialinImage[] mIcons;
-    private DialinImage mLauncher;
+    private Uri[] mIconsUri;
+    private Uri mLauncherUri;
     private int mButtonHighlightStateDrawableResourceId;
     private int mButtonHighlightResourceId;
 
-    public ButtonIconSet(int buttonHighlightStateDrawable, int buttonHighlightResource, DialinImage launcherIcon, DialinImage... icons) {
+    public ButtonIconSet(int buttonHighlightStateDrawable, int buttonHighlightResource, Uri launcherIcon, Uri... iconsUri) {
         mButtonHighlightStateDrawableResourceId = buttonHighlightStateDrawable;
         mButtonHighlightResourceId = buttonHighlightResource;
-        mLauncher = launcherIcon;
-        mIcons = icons;
+        mLauncherUri = launcherIcon;
+        mIconsUri = iconsUri;
     }
 
     public Uri getIcon(int index) {
-        return mIcons[index].getImageUri();
+        return mIconsUri[index];
     }
 
-    public Uri getLauncher() {
-        return mLauncher.getImageUri();
+    public Uri getLauncherUri() {
+        return mLauncherUri;
     }
 
     public int getButtonHighlightStateDrawableResourceId() {

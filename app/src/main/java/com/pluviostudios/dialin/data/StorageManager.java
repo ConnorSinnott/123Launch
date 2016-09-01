@@ -2,7 +2,9 @@ package com.pluviostudios.dialin.data;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.pluviostudios.dialin.database.DBContract;
@@ -24,7 +26,8 @@ public class StorageManager {
     public static final String EXTRA_AFFECTED_APPWIDGETIDS = "extra_affected_appWidgetIds";
     public static final String EXTRA_SUCCESS = "extra_result";
 
-    private static Long sCurrentConfigId = null;
+    public static final String PREF_CACHED_ID = "pref_cached_id";
+    public static final String PREF_CACHED_JSON = "pref_cached_json";
 
     public static Bundle saveNewConfiguration(Context context, String configurationTitle, int buttonCount, int launchButtonIndex, Node node) {
 
@@ -41,7 +44,7 @@ public class StorageManager {
             newValues.put(DBContract.ConfigEntry.LAUNCH_BUTTON_INDEX, launchButtonIndex);
 
             // Insert the new row into database and get the new configuration id
-            sCurrentConfigId = DBContract.ConfigEntry.getIdFromUri(
+            Long sCurrentConfigId = DBContract.ConfigEntry.getIdFromUri(
                     context.getContentResolver().insert(
                             DBContract.ConfigEntry.CONTENT_URI,
                             newValues
@@ -111,6 +114,18 @@ public class StorageManager {
 
     }
 
+    public static ArrayList<Integer> deleteConfiguration(Context context, long configurationId) {
+
+        context.getContentResolver().delete(
+                DBContract.ConfigEntry.buildConfigWithId(configurationId),
+                null,
+                null
+        );
+
+        return WidgetManager.getWidgetsUsingConfig(context, configurationId);
+
+    }
+
     public static Node loadNode(Context context, long configurationId) {
 
         try {
@@ -132,7 +147,25 @@ public class StorageManager {
 
         try {
 
-            String savedJson = FileManager.readFromFile(context, String.valueOf(configurationId));
+            String savedJson;
+
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+            long cachedId = sharedPreferences.getLong(PREF_CACHED_ID, -1);
+
+            if (configurationId == cachedId) {
+
+                savedJson = sharedPreferences.getString(PREF_CACHED_JSON, null);
+
+            } else {
+
+                savedJson = FileManager.readFromFile(context, String.valueOf(configurationId));
+                sharedPreferences.edit()
+                        .putString(PREF_CACHED_JSON, savedJson)
+                        .putLong(PREF_CACHED_ID, configurationId)
+                        .apply();
+
+            }
+
             return JSONNodeConverter.loadNodeByPath(savedJson, path);
 
         } catch (JSONException e) {

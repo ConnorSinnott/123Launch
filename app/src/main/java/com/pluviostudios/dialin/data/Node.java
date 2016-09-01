@@ -63,10 +63,26 @@ public class Node {
 
         mAction = dialinAction;
 
-        Node currentNode = this;
-        while (currentNode != null) {
-            currentNode.isBlank = false;
-            currentNode = currentNode.parent;
+        if (dialinAction != null) {
+
+            Node currentNode = this;
+            while (currentNode != null) {
+                currentNode.isBlank = false;
+                currentNode = currentNode.parent;
+            }
+
+        } else {
+
+            Node currentNode = this;
+            while (currentNode != null) {
+                if (currentNode.getChildIndexes().length == 1) {
+                    currentNode.isBlank = true;
+                    currentNode = currentNode.parent;
+                } else {
+                    break;
+                }
+            }
+
         }
 
     }

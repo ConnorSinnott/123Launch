@@ -8,52 +8,58 @@ import android.view.View;
 import android.widget.Button;
 
 import com.pluviostudios.dialin.R;
-import com.pluviostudios.dialin.buttonIconSet.ButtonIconSet;
-import com.pluviostudios.dialin.buttonIconSet.ButtonIconSetManager;
+import com.pluviostudios.dialin.appearanceActivity.fragments.AvailableSkinsDialog;
 import com.pluviostudios.dialin.buttonsActivity.fragments.ButtonsFragment;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 /**
  * Created by spectre on 8/13/16.
  */
-public class AppearanceActivity extends AppCompatActivity implements View.OnClickListener {
+public class AppearanceActivity extends AppCompatActivity implements View.OnClickListener, AvailableSkinsDialog.OnSkinSelected {
 
     public static final String TAG = "AppearanceActivity";
+
+    private static final int DEFAULT_BUTTON_COUNT = 5;
 
     public static final int APPEARANCE_ACTIVITY_REQUEST_CODE = 555;
     public static final String EXTRA_CHANGES_MADE = "extra_changes_made";
 
-    private static final int DEFAULT_BUTTON_COUNT = 5;
+    private Button mButtonSave;
 
-    @BindView(R.id.activity_buttons_save_button) Button mButtonSave;
-
+    private AvailableSkinsDialog mAvailableSkinsDialog;
     private boolean changesMade = false;
-    private ButtonIconSet mButtonIconSet;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTitle("Appearance");
         setContentView(R.layout.activity_buttons);
+        mButtonSave = (Button) findViewById(R.id.activity_buttons_save_button);
 
-        ButterKnife.bind(this);
         mButtonSave.setOnClickListener(this);
-
-        mButtonIconSet = ButtonIconSetManager.getButtonIconSet(this, DEFAULT_BUTTON_COUNT);
 
         showButtonsFragment();
 
     }
 
-    private void showButtonsFragment() {
-        if (mButtonIconSet != null) {
-            ButtonsFragment buttonsFragment = ButtonsFragment.buildButtonsFragment(DEFAULT_BUTTON_COUNT, mButtonIconSet);
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.activity_buttons_top_frame, buttonsFragment)
-                    .commit();
+    @Override
+    protected void onStart() {
+        // Reestablish onSkinSelected onStart
+
+        if (mAvailableSkinsDialog == null) {
+            mAvailableSkinsDialog = new AvailableSkinsDialog();
+            mAvailableSkinsDialog.show(getSupportFragmentManager(), AvailableSkinsDialog.TAG);
         }
+
+        mAvailableSkinsDialog.setOnSkinSelected(this);
+
+        super.onStart();
+    }
+
+    private void showButtonsFragment() {
+        ButtonsFragment buttonsFragment = ButtonsFragment.buildButtonsFragment(DEFAULT_BUTTON_COUNT);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.activity_buttons_top_frame, buttonsFragment)
+                .commit();
     }
 
     @Override
@@ -75,4 +81,13 @@ public class AppearanceActivity extends AppCompatActivity implements View.OnClic
         finish();
     }
 
+    @Override
+    public void onInternetSkinDownload() {
+
+    }
+
+    @Override
+    public void onSkinSelected() {
+
+    }
 }

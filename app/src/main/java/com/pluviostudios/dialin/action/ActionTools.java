@@ -1,5 +1,6 @@
 package com.pluviostudios.dialin.action;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -13,7 +14,7 @@ public class ActionTools {
 
     public static final String TAG = "ActionTools";
 
-    public static final Uri getPrefferedApplicationIconUri(Context context, Intent launcherIntent) {
+    public static final Uri getPreferredApplicationForIntent(Context context, Intent launcherIntent) {
 
         // Setting Icon to default browser icon
         Intent i = (new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com")));
@@ -33,4 +34,14 @@ public class ActionTools {
         } else
             return null;
     }
+
+    public static Uri convertResourceToUri(Context context, int resourceID) {
+        return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
+                context.getResources().getResourcePackageName(resourceID) + '/' +
+                context.getResources().getResourceTypeName(resourceID) + '/' +
+                context.getResources().getResourceEntryName(resourceID));
+    }
+
+
+
 }

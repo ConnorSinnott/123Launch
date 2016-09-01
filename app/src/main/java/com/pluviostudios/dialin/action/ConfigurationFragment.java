@@ -2,11 +2,7 @@ package com.pluviostudios.dialin.action;
 
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 import java.util.ArrayList;
 
@@ -17,29 +13,16 @@ public abstract class ConfigurationFragment extends Fragment {
 
     public static final String TAG = "ConfigurationFragment";
 
-    public static final String EXTRA_ARGUMENTS_ARRAY = "extra_arguments";
+    public static final String EXTRA_PARAMETERS_ARRAY = "extra_parameters";
 
-    public void setActionArguments(ArrayList<String> actionArguments) {
+    public void setActionParameters(ArrayList<String> actionParameters) {
         Bundle bundle = new Bundle();
-        bundle.putStringArrayList(EXTRA_ARGUMENTS_ARRAY, actionArguments);
+        bundle.putStringArrayList(EXTRA_PARAMETERS_ARRAY, actionParameters);
         setArguments(bundle);
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        ArrayList<String> savedArguments = null;
-        if (getArguments() != null) {
-            Bundle extras = getArguments();
-            if (extras.containsKey(EXTRA_ARGUMENTS_ARRAY)) {
-                savedArguments = extras.getStringArrayList(EXTRA_ARGUMENTS_ARRAY);
-            }
-        }
-        return onCreateView(inflater, container, savedArguments);
-    }
+    public abstract ArrayList<String> getActionParameters();
 
-    public abstract View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable ArrayList<String> savedActionArguments);
-
-    public abstract ArrayList<String> getActionArguments();
+    public abstract int getParentActionId();
 
 }

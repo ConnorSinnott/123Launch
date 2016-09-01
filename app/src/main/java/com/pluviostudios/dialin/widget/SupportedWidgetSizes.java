@@ -27,8 +27,7 @@ public class SupportedWidgetSizes {
      * <p/>
      * 6. Update the function getWidgetRemoteView below, adding the newly created xml layout in a case statement relevant to the new size
      */
-    public static final int[] SUPPORTED_WIDGET_SIZES = new int[]{4, 5};
-
+    public static int[] SUPPORTED_WIDGET_SIZES = new int[]{4, 5};
 
     public static ArrayList<Integer> getWidgetButtonIds(int buttonCount) {
 
@@ -68,17 +67,25 @@ public class SupportedWidgetSizes {
 
     }
 
-    public static RemoteViews getWidgetRemoteView(Context context, int buttonCount) {
+    public static RemoteViews getWidgetRemoteView(Context context, int buttonCount, boolean horizontal) {
 
         RemoteViews remoteViews;
         switch (buttonCount) {
 
             case 4:
-                remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_4x1);
+                if (horizontal) {
+                    remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_4x1);
+                } else {
+                    remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_4x1_vertical);
+                }
                 break;
 
             case 5:
-                remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_5x1);
+                if (horizontal) {
+                    remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_5x1);
+                } else {
+                    remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_5x1_vertical);
+                }
                 break;
 
             // Ex.
@@ -104,6 +111,18 @@ public class SupportedWidgetSizes {
      * Created by spectre on 7/26/16.
      */
     public static class Widget5x1Provider extends BaseWidgetProvider {
+    }
+
+    /**
+     * Created by spectre on 7/26/16.
+     */
+    public static class Widget4x1VerticalProvider extends BaseWidgetProvider {
+    }
+
+    /**
+     * Created by spectre on 7/26/16.
+     */
+    public static class Widget5x1VerticalProvider extends BaseWidgetProvider {
     }
 
 }

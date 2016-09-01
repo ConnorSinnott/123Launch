@@ -92,7 +92,7 @@ public class JSONNodeConverter {
                 }
 
                 // Assign action parameters
-                action.setActionArguments(actionParameters);
+                action.setParameters(actionParameters);
 
             }
 
@@ -133,7 +133,7 @@ public class JSONNodeConverter {
                             }
 
                             // Assign action parameters
-                            action.setActionArguments(actionParameters);
+                            action.setParameters(actionParameters);
 
                         }
 
@@ -174,11 +174,11 @@ public class JSONNodeConverter {
             currentNode.put(JSON_ACTION_ID, action.getActionId());
 
             // If the action has arguments, add them to a JSONArray
-            if (action.getActionArguments() != null) {
+            if (action.getActionParameters() != null) {
 
                 JSONArray actionArguments = new JSONArray();
 
-                for (String currActionArgument : action.getActionArguments()) {
+                for (String currActionArgument : action.getActionParameters()) {
                     actionArguments.put(currActionArgument);
                 }
 

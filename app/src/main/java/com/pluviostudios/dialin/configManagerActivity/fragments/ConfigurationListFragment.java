@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin.configListActivity.fragments;
+package com.pluviostudios.dialin.configManagerActivity.fragments;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -21,8 +21,7 @@ import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.database.DBContract;
 import com.pluviostudios.dialin.utilities.Utilities;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import org.greenrobot.eventbus.EventBus;
 
 /**
  * Created by spectre on 8/2/16.
@@ -32,12 +31,11 @@ public class ConfigurationListFragment extends Fragment implements LoaderManager
     public static final String TAG = "ConfigListFragment";
     public static final String EXTRA_BUTTON_COUNT = "extra_button_count";
 
-    @BindView(R.id.activity_list_listview) ListView mListView;
-    @BindView(R.id.activity_list_fab) FloatingActionButton mNewConfigButton;
-    @BindView(R.id.activity_list_no_configurations) TextView mNoConfigurations;
+    private ListView mListView;
+    private FloatingActionButton mNewConfigButton;
+    private TextView mNoConfigurations;
 
-    protected OnConfigurationSelected mOnConfigurationSelected;
-    protected CursorAdapter mCursorAdapter;
+    private CursorAdapter mCursorAdapter;
     private View mRoot;
 
     public static ConfigurationListFragment buildConfigListFragment(int buttonCount) {
@@ -52,7 +50,9 @@ public class ConfigurationListFragment extends Fragment implements LoaderManager
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         mRoot = inflater.inflate(R.layout.activity_list, container, false);
-        ButterKnife.bind(this, mRoot);
+        mListView = (ListView) mRoot.findViewById(R.id.activity_list_listview);
+        mNewConfigButton = (FloatingActionButton) mRoot.findViewById(R.id.activity_list_fab);
+        mNoConfigurations = (TextView) mRoot.findViewById(R.id.activity_list_no_configurations);
 
         // Throw exceptions if we are missing expected extras
         Bundle extras = getArguments();
@@ -61,22 +61,10 @@ public class ConfigurationListFragment extends Fragment implements LoaderManager
 
         // Init loader which will populate the listView with configuration files relevant to buttonCount
         getLoaderManager().initLoader(0, extras, this);
+
         return mRoot;
 
     }
-
-    @Override
-    public void onAttach(Context context) {
-
-        if (!(context instanceof OnConfigurationSelected))
-            throw new RuntimeException("Parent activity should implement " + OnConfigurationSelected.class.getCanonicalName());
-
-        mOnConfigurationSelected = (OnConfigurationSelected) context;
-
-        super.onAttach(context);
-
-    }
-
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -145,33 +133,25 @@ public class ConfigurationListFragment extends Fragment implements LoaderManager
         if (view instanceof FloatingActionButton) {
             // The user is attempting to make a new configuration | view = FAB
 
-            mOnConfigurationSelected.onNewConfiguration();
+            EventBus.getDefault().post(new ConfigurationListFragmentEvent(ConfigurationListFragmentEvent.TYPE_NEW_CONFIGURATION, -1));
 
         } else if (view instanceof ImageButton) {
             // The user is attempting to edit a configuration | view = edit configuration image button
 
-            View parentView = ((ViewGroup) view.getParent());
+            long configId = (long) ((ViewGroup) view.getParent()).getTag();
 
-            long configId = (long) parentView.getTag();
-
-            mOnConfigurationSelected.onConfigurationEdit(configId);
+            EventBus.getDefault().post(new ConfigurationListFragmentEvent(ConfigurationListFragmentEvent.TYPE_CONFIGURATION_EDIT, configId));
 
         } else {
             // The user is selecting a configuration | view = configuration list item
 
             long id = (long) view.getTag();
-            mOnConfigurationSelected.onConfigurationSelected(id);
+
+            EventBus.getDefault().post(new ConfigurationListFragmentEvent(ConfigurationListFragmentEvent.TYPE_CONFIGURATION_SELECTED, id));
 
         }
 
     }
 
-    public interface OnConfigurationSelected {
-        void onConfigurationEdit(long configurationId);
-
-        void onConfigurationSelected(long configurationId);
-
-        void onNewConfiguration();
-    }
 
 }
