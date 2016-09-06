@@ -2,6 +2,7 @@ package com.pluviostudios.dialin.action;
 
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -71,5 +72,8 @@ public abstract class Action {
     protected Context getContext() {
         return ActionManager.getContext();
     }
+
+    @Nullable
+    public abstract String[] getRequiredPermissions();
 
 }

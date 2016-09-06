@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.util.Log;
 
 import com.pluviostudios.dialin.data.Node;
 import com.pluviostudios.dialin.data.StorageManager;
@@ -18,6 +17,8 @@ import java.util.ArrayList;
  */
 public class OnPackageUninstall extends BroadcastReceiver {
 
+    //Todo make a volatile column on config which will list items that are outside of the applications control
+
     public static final String TAG = "OnPackageUninstall";
 
     @Override
@@ -27,8 +28,6 @@ public class OnPackageUninstall extends BroadcastReceiver {
 
         // Remove "package:" from beginning of string
         packageName = packageName.substring(8, packageName.length());
-
-        Log.d(TAG, "onReceive: Application Removed: " + packageName);
 
         final String[] projection = new String[]{
                 DBContract.ConfigEntry._ID,

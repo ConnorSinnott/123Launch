@@ -82,6 +82,12 @@ public class ActionLaunchApplication extends Action {
         }
     }
 
+    @Nullable
+    @Override
+    public String[] getRequiredPermissions() {
+        return null;
+    }
+
     @Override
     public ConfigurationFragment buildConfigurationFragment() {
         return new LaunchApplicationConfigurationFragment();

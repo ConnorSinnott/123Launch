@@ -6,7 +6,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.RemoteViews;
 
@@ -106,8 +105,7 @@ public class WidgetManager {
                     int buttonCount = c.getInt(2);
                     int launchButtonIndex = c.getInt(3);
 
-                    Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
-                    boolean isVertical = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH) > options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT);
+                    boolean isVertical = WidgetTools.isWidgetVertical(context, appWidgetId);
 
                     // Convert the rawPath (Ex. "0 2 1") into an ArrayList (essentially String.split(" ") )
                     ArrayList<Integer> path = convertStringToPath(rawPath);

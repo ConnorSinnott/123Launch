@@ -55,6 +55,12 @@ public class ActionLaunchWebsite extends Action {
 
     }
 
+    @Nullable
+    @Override
+    public String[] getRequiredPermissions() {
+        return null;
+    }
+
     @Override
     public ConfigurationFragment buildConfigurationFragment() {
         return new ActionLaunchWebsiteConfigFragment();

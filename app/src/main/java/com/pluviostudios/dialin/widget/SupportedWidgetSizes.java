@@ -67,24 +67,24 @@ public class SupportedWidgetSizes {
 
     }
 
-    public static RemoteViews getWidgetRemoteView(Context context, int buttonCount, boolean horizontal) {
+    public static RemoteViews getWidgetRemoteView(Context context, int buttonCount, boolean vertical) {
 
         RemoteViews remoteViews;
         switch (buttonCount) {
 
             case 4:
-                if (horizontal) {
-                    remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_4x1);
-                } else {
+                if (vertical) {
                     remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_4x1_vertical);
+                } else {
+                    remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_4x1);
                 }
                 break;
 
             case 5:
-                if (horizontal) {
-                    remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_5x1);
-                } else {
+                if (vertical) {
                     remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_5x1_vertical);
+                } else {
+                    remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_5x1);
                 }
                 break;
 

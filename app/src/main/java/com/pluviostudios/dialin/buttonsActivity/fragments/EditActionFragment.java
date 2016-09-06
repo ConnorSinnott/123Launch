@@ -1,8 +1,11 @@
 package com.pluviostudios.dialin.buttonsActivity.fragments;
 
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +18,7 @@ import com.pluviostudios.dialin.action.Action;
 import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
 import com.pluviostudios.dialin.action.defaultActions.EmptyAction;
+import com.pluviostudios.dialin.buttonsActivity.OnRequestPermissionResultEvent;
 import com.pluviostudios.dialin.dialogFragments.IconListDialogFragment;
 import com.pluviostudios.dialin.dialogFragments.IconListDialogFragmentEvent;
 import com.pluviostudios.dialin.utilities.Utilities;
@@ -151,7 +155,6 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
         mListItemActionTextView.setText(mAction.getActionName());
         mListItemActionImageView.setImageURI(mAction.getActionImageUri());
 
-
         // If the action does not have a configuration fragment, than delete the currently displayed fragment, it does not belong there anymore
         if (!mAction.hasConfigurationFragment()) {
             clearConfigFragment();
@@ -218,9 +221,7 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
         switch (view.getId()) {
             case R.id.fragment_edit_action_ok:
 
-                // On OK return the configured fragment using OnActionConfigured
-                mAction.saveParameters();
-                EventBus.getDefault().post(new EditActionFragmentEvents.Outgoing.OnConfigured(mAction));
+                checkPermissions();
 
                 break;
 
@@ -242,6 +243,46 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
 
     }
 
+    private void checkPermissions() {
+
+        if (mAction.getRequiredPermissions() != null && mAction.getRequiredPermissions().length > 0) {
+
+            String[] requiredPermissions = mAction.getRequiredPermissions();
+
+            for (int i = 0; i < requiredPermissions.length; i++) {
+
+                String currRequiredPermission = requiredPermissions[i];
+
+                if (ContextCompat.checkSelfPermission(getActivity(), currRequiredPermission) != PackageManager.PERMISSION_GRANTED) {
+
+                    ActivityCompat.requestPermissions(getActivity(), new String[]{currRequiredPermission}, i);
+
+                    return;
+
+                }
+
+            }
+
+            finishConfigure();
+
+        } else {
+
+            finishConfigure();
+
+        }
+
+
+    }
+
+    private void finishConfigure() {
+
+        // On OK return the configured fragment using OnActionConfigured
+        mAction.saveParameters();
+
+        EventBus.getDefault().post(new EditActionFragmentEvents.Outgoing.OnConfigured(mAction));
+
+    }
+
     @Subscribe
     public void onIconListDialogFragmentEvent(IconListDialogFragmentEvent event) {
 
@@ -252,6 +293,25 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
             mAction = ActionManager.getInstanceOfAction(actionId);
             updateCurrentAction();
 
+        }
+
+    }
+
+    @Subscribe
+    public void onRequestPermissionResultEvent(OnRequestPermissionResultEvent event) {
+
+        if (event.grantResults.length > 0
+                && event.grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+            checkPermissions();
+
+            // permission was granted, yay! Do the
+            // contacts-related task you need to do.
+
+        } else {
+
+            // permission denied, boo! Disable the
+            // functionality that depends on this permission.
         }
 
     }

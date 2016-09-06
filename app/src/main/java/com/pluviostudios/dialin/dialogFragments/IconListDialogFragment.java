@@ -35,6 +35,8 @@ public class IconListDialogFragment extends DialogFragment {
     public static final String EXTRA_REQUEST_CODE = "extra_request_code";
     public static final String EXTRA_TITLE_LIST = "extra_title_list";
     public static final String EXTRA_URI_LIST = "extra_uri_list";
+    public static final String EXTRA_SHOW_TITLE = "extra_show_title";
+    public static final String EXTRA_TITLE = "extra_title";
 
     private int requestCode;
     private ArrayList<String> titleList;
@@ -59,14 +61,19 @@ public class IconListDialogFragment extends DialogFragment {
         Utilities.checkBundleForExpectedExtras(getArguments(),
                 EXTRA_REQUEST_CODE,
                 EXTRA_TITLE_LIST,
-                EXTRA_URI_LIST);
+                EXTRA_URI_LIST,
+                EXTRA_SHOW_TITLE,
+                EXTRA_TITLE);
 
         requestCode = getArguments().getInt(EXTRA_REQUEST_CODE);
         titleList = getArguments().getStringArrayList(EXTRA_TITLE_LIST);
         uriList = getArguments().getParcelableArrayList(EXTRA_URI_LIST);
+        boolean showTitle = getArguments().getBoolean(EXTRA_SHOW_TITLE);
+        String dialogTitle = getArguments().getString(EXTRA_TITLE);
 
-        if (titleList.size() != uriList.size())
-            throw new RuntimeException("TitleList count differs from UriList count");
+        if (showTitle) {
+            getDialog().setTitle(dialogTitle);
+        }
 
         listView.setAdapter(new IconListDialogAdapter());
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -126,6 +133,8 @@ public class IconListDialogFragment extends DialogFragment {
         public static final String TAG = "IconListDataGenerator";
 
         final int requestCode;
+        String dialogTitle;
+        boolean showTitle = false;
         ArrayList<String> titlesList = new ArrayList<>();
         ArrayList<Uri> uriList = new ArrayList<>();
         ArrayList<Serializable> mSerializableArrayList = new ArrayList<>();
@@ -145,6 +154,16 @@ public class IconListDialogFragment extends DialogFragment {
             return addItem(title, ActionTools.convertResourceToUri(context, resourceId));
         }
 
+        public Builder setTitle(String dialogTitle) {
+            this.dialogTitle = dialogTitle;
+            return this;
+        }
+
+        public Builder showDialogTitle(boolean showDialogTitle) {
+            showTitle = showDialogTitle;
+            return this;
+        }
+
         public IconListDialogFragment build() {
 
             IconListDialogFragment iconListDialogFragment2 = new IconListDialogFragment();
@@ -152,6 +171,8 @@ public class IconListDialogFragment extends DialogFragment {
             extras.putInt(EXTRA_REQUEST_CODE, requestCode);
             extras.putStringArrayList(EXTRA_TITLE_LIST, titlesList);
             extras.putParcelableArrayList(EXTRA_URI_LIST, uriList);
+            extras.putString(EXTRA_TITLE, dialogTitle);
+            extras.putBoolean(EXTRA_SHOW_TITLE, showTitle);
             iconListDialogFragment2.setArguments(extras);
             return iconListDialogFragment2;
 

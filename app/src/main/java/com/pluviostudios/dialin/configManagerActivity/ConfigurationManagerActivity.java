@@ -22,6 +22,7 @@ import com.pluviostudios.dialin.dialogFragments.IconListDialogFragmentEvent;
 import com.pluviostudios.dialin.settings.SettingsActivity;
 import com.pluviostudios.dialin.widget.SupportedWidgetSizes;
 import com.pluviostudios.dialin.widget.WidgetManager;
+import com.pluviostudios.dialin.widget.WidgetTools;
 import com.viewpagerindicator.TitlePageIndicator;
 
 import org.greenrobot.eventbus.EventBus;
@@ -68,13 +69,7 @@ public class ConfigurationManagerActivity extends AppCompatActivity {
             //Get mWidgetId (Will increment every time a widget is added to the home screen)
             mWidgetId = getIntent().getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
 
-            //Determine button count
-            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-            Bundle options = appWidgetManager.getAppWidgetOptions(mWidgetId);
-            int width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
-            int height = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT);
-            int maxDimension = Math.max(width, height);
-            mWidgetButtonCount = (maxDimension + 30) / 70; // Homescreen tile = n * 70 - 30
+            mWidgetButtonCount = WidgetTools.getTileCount(this, mWidgetId);
 
         }
 
@@ -129,8 +124,8 @@ public class ConfigurationManagerActivity extends AppCompatActivity {
                 currentlySelectedConfigurationId = event.configurationId;
 
                 new IconListDialogFragment.Builder(DIALOG_REQUEST_CODE)
-                        .addItem("Edit", this, android.R.drawable.ic_menu_edit)
-                        .addItem("Delete", this, android.R.drawable.ic_delete)
+                        .addItem("Edit", this, R.drawable.ic_mode_edit_black_24px)
+                        .addItem("Delete", this, R.drawable.ic_delete_forever_black_24px)
                         .build().show(getSupportFragmentManager(), IconListDialogFragment.TAG);
 
                 break;

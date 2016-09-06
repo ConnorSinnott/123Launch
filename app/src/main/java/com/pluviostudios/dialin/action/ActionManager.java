@@ -64,7 +64,7 @@ public class ActionManager {
             }
             throw new RuntimeException("ActionId " + actionId + " not found");
         } else {
-            throw new RuntimeException("ActionManager has not been initialized, please call ActionManager.initialize() first");
+            throw new RuntimeException("ActionManager has not been initialized, please call ActionManager.initializeWidget() first");
         }
 
     }

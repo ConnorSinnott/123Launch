@@ -1,6 +1,7 @@
 package com.pluviostudios.dialin.action.defaultActions;
 
 import android.net.Uri;
+import android.support.annotation.Nullable;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
@@ -37,5 +38,11 @@ public class EmptyAction extends Action {
     @Override
     public boolean onExecute() {
         return false;
+    }
+
+    @Nullable
+    @Override
+    public String[] getRequiredPermissions() {
+        return null;
     }
 }

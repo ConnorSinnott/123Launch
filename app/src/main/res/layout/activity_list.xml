@@ -27,9 +27,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipToPadding="false"
-            android:paddingBottom="64dp"
-            />
-
+            android:headerDividersEnabled="false"
+            android:paddingBottom="64dp"/>
 
     </FrameLayout>
 
@@ -40,8 +39,8 @@
         android:layout_margin="16dp"
         android:layout_marginTop="-36dp"
         android:elevation="4sp"
-        android:src="@drawable/ic_add_white_24dp"
         app:layout_anchor="@+id/activity_list_frame"
-        app:layout_anchorGravity="bottom|right|end"/>
+        app:layout_anchorGravity="bottom|right|end"
+        app:srcCompat="@drawable/ic_add_white_24px"/>
 
 </android.support.design.widget.CoordinatorLayout>

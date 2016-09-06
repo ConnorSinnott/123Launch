@@ -20,7 +20,6 @@ public abstract class ConfigurationFragment extends Fragment {
         bundle.putStringArrayList(EXTRA_PARAMETERS_ARRAY, actionParameters);
         setArguments(bundle);
     }
-
     public abstract ArrayList<String> getActionParameters();
 
     public abstract int getParentActionId();

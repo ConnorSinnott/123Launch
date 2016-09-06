@@ -430,7 +430,7 @@ public class ButtonsActivity extends AppCompatActivity {
 
         // Once action has been setup through EditActionFragment, assign the new action to this node
         Node editNode = mCurrentNode.getChild(mNodeBeingEditedIndex);
-        if(event.action instanceof EmptyAction) {
+        if (event.action instanceof EmptyAction) {
             editNode.setAction(null);
         } else {
             editNode.setAction(event.action);
@@ -542,6 +542,11 @@ public class ButtonsActivity extends AppCompatActivity {
 
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        EventBus.getDefault().post(new OnRequestPermissionResultEvent(requestCode, permissions, grantResults));
     }
 
 }
