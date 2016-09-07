@@ -1,36 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical">
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <TextView
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:text="
-        Welcome! This is the configuration screen for the widget. Here you will set up the shortcuts that the widget will use.
-        \n \n
-        Behind this obstructive dialog, you will notice several buttons above. One of these buttons has an arrow, this is the 'launch' button.
-        \n \n
-        With the exception of the launch button, you may click and hold any of the buttons to assign an action.
-        \n \n
-        Once an action has been assigned, clicking that button will move the action to the 'launch' button.
-        \n \n
-        You might notice that, upon clicking a button, any other actions which have been assigned disappear.
-        \n \n
-        The idea behind 123Go, is that every button has more buttons behind it. The other actions have not disappeared, you have just moved 'deeper' into the tree. This allows for an infinite amount of actions!
-        \n \n
-        Press the launch button while it is has an action to execute that action. Or, press it while it is empty to return to the first level.
-        \n \n
-        Once you are done, press the 'Done' button below to save your new configuration. Then, when you place the 123Go widget on your homescreen, select this as your configuration.
-        \n \n
-        "
-            android:textSize="18sp"/>
+            android:paddingBottom="8dp"
+            android:paddingEnd="8dp"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:paddingStart="8dp"
+            android:paddingTop="8dp"
+    >
 
-    </ScrollView>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical">
 
-</LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Welcome!"
+            android:textSize="24dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="This is the configuration screen for your new widget!"
+            android:textSize="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="\n Behind this dialog, you'll find several buttons: \n"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="@android:dimen/app_icon_size"
+                android:layout_height="@android:dimen/app_icon_size"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_blaunch"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" The Launch Button (Only 1)"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="@android:dimen/app_icon_size"
+                android:layout_height="@android:dimen/app_icon_size"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_bblue"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" The Child Buttons (Multiple)"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="\n By HOLDING down a child button, you can assign it an action. For example, you might assign a child button the action \n 'Launch google.com' \n"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text=" To then start that action, CLICK the button to move it to the Launch Button, and CLICK the launch button. \n"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text=" What makes 123Go special, is that every button has more buttons behind it. \n\n A button's children are displayed when you CLICK on that button. These child buttons can be assigned actions as well. \n"/>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="164dp"
+            android:src="@drawable/explain"/>
+
+    </LinearLayout>
+
+</ScrollView>

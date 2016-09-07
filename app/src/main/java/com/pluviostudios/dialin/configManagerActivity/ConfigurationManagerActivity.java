@@ -9,13 +9,14 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.appearanceActivity.AppearanceActivity;
 import com.pluviostudios.dialin.buttonsActivity.ButtonsActivity;
 import com.pluviostudios.dialin.configManagerActivity.fragments.ConfigurationListFragment;
-import com.pluviostudios.dialin.configManagerActivity.fragments.ConfigurationListFragmentEvent;
+import com.pluviostudios.dialin.configManagerActivity.fragments.ConfigurationListFragmentEvents;
 import com.pluviostudios.dialin.data.StorageManager;
 import com.pluviostudios.dialin.dialogFragments.IconListDialogFragment;
 import com.pluviostudios.dialin.dialogFragments.IconListDialogFragmentEvent;
@@ -59,6 +60,8 @@ public class ConfigurationManagerActivity extends AppCompatActivity {
 
         mTitlePageIndicator = (TitlePageIndicator) findViewById(R.id.activity_configuration_manager_titles);
         mViewPager = (ViewPager) findViewById(R.id.activity_configuration_manager_viewpager);
+
+        Toast.makeText(this, "123Go Debug Copy", Toast.LENGTH_SHORT).show();
 
         // Initialize action manager with this context
         ActionManager.initialize(this);
@@ -115,58 +118,51 @@ public class ConfigurationManagerActivity extends AppCompatActivity {
     }
 
     @Subscribe
-    public void onConfigurationListFragmentEvent(final ConfigurationListFragmentEvent event) {
+    public void onConfigurationListFragmentEditEvent(ConfigurationListFragmentEvents.Outgoing.EditEvent event) {
 
-        switch (event.type) {
+        currentlySelectedConfigurationId = event.configurationId;
 
-            case ConfigurationListFragmentEvent.TYPE_CONFIGURATION_EDIT: {
+        new IconListDialogFragment.Builder(DIALOG_REQUEST_CODE)
+                .addItem("Edit", this, R.drawable.ic_mode_edit_black_24px)
+                .addItem("Delete", this, R.drawable.ic_delete_forever_black_24px)
+                .build().show(getSupportFragmentManager(), IconListDialogFragment.TAG);
 
-                currentlySelectedConfigurationId = event.configurationId;
 
-                new IconListDialogFragment.Builder(DIALOG_REQUEST_CODE)
-                        .addItem("Edit", this, R.drawable.ic_mode_edit_black_24px)
-                        .addItem("Delete", this, R.drawable.ic_delete_forever_black_24px)
-                        .build().show(getSupportFragmentManager(), IconListDialogFragment.TAG);
+    }
 
-                break;
-            }
-            case ConfigurationListFragmentEvent.TYPE_NEW_CONFIGURATION: {
+    @Subscribe
+    public void onConfigurationListFragmentSelectedEvent(ConfigurationListFragmentEvents.Outgoing.SelectedEvent event) {
 
-                currentlySelectedConfigurationId = null;
+        currentlySelectedConfigurationId = event.configurationId;
 
-                int buttonCount = (mWidgetButtonCount != 0) ? mWidgetButtonCount : SupportedWidgetSizes.SUPPORTED_WIDGET_SIZES[mViewPager.getCurrentItem()];
+        // If the application was started by a widget
+        if (mWidgetId != 0) {
 
-                Intent intent = ButtonsActivity.buildMainActivityForNewConfiguration(this,
-                        buttonCount + "x1 New Configuration",
-                        buttonCount);
-                startActivityForResult(intent, ButtonsActivity.EDIT_CONFIG_RESULT_CODE);
+            // Add this widget to the database and attach it to this configuration
+            WidgetManager.addWidgetToDB(this, mWidgetId, event.configurationId);
 
-                break;
+            // Update the new widget
+            WidgetManager.updateWidgets(this, mWidgetId);
 
-            }
-            case ConfigurationListFragmentEvent.TYPE_CONFIGURATION_SELECTED: {
-
-                currentlySelectedConfigurationId = event.configurationId;
-
-                // If the application was started by a widget
-                if (mWidgetId != 0) {
-
-                    // Add this widget to the database and attach it to this configuration
-                    WidgetManager.addWidgetToDB(this, mWidgetId, event.configurationId);
-
-                    // Update the new widget
-                    WidgetManager.updateWidgets(this, mWidgetId);
-
-                    Intent data = new Intent();
-                    data.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mWidgetId);
-                    setResult(RESULT_OK, data);
-                    finish();
-                }
-
-                break;
-            }
-
+            Intent data = new Intent();
+            data.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mWidgetId);
+            setResult(RESULT_OK, data);
+            finish();
         }
+
+    }
+
+    @Subscribe
+    public void onConfigurationListFragmentNewConfigurationEvent(ConfigurationListFragmentEvents.Outgoing.NewConfiguration event) {
+
+        currentlySelectedConfigurationId = null;
+
+        int buttonCount = (mWidgetButtonCount != 0) ? mWidgetButtonCount : SupportedWidgetSizes.SUPPORTED_WIDGET_SIZES[mViewPager.getCurrentItem()];
+
+        Intent intent = ButtonsActivity.buildMainActivityForNewConfiguration(this,
+                buttonCount + "x1 New Configuration",
+                buttonCount);
+        startActivityForResult(intent, ButtonsActivity.EDIT_CONFIG_RESULT_CODE);
 
     }
 

@@ -3,9 +3,11 @@ package com.pluviostudios.dialin.buttonsActivity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -58,6 +60,8 @@ public class ButtonsActivity extends AppCompatActivity {
     public static final String SAVED_PATH = "saved_path";
     public static final String SAVED_EDIT_NODE_INDEX = "saved_edit_node_index";
     public static final String SAVED_TEMP_JSON = "saved_temp_json";
+
+    public static final String PREF_FIRST_LAUNCH = "pref_first_launch";
 
     private Button mButtonOk;
 
@@ -200,6 +204,14 @@ public class ButtonsActivity extends AppCompatActivity {
                 finishButtonConfiguration();
             }
         });
+
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if (sharedPreferences.getBoolean(PREF_FIRST_LAUNCH, true)) {
+            sharedPreferences.edit().putBoolean(PREF_FIRST_LAUNCH, false).apply();
+            showHelpMenu();
+        }
+
 
     }
 
@@ -390,6 +402,11 @@ public class ButtonsActivity extends AppCompatActivity {
 
     }
 
+    private void showHelpMenu() {
+        HelpDialogFragment helpDialogFragment = new HelpDialogFragment();
+        helpDialogFragment.show(getSupportFragmentManager(), HelpDialogFragment.TAG);
+    }
+
     @Subscribe
     public void onButtonsFragmentClick(ButtonFragmentEvents.Outgoing.ClickEvent clickEvent) {
 
@@ -485,8 +502,7 @@ public class ButtonsActivity extends AppCompatActivity {
                 break;
             }
             case R.id.menu_activity_configuration_help: {
-                HelpDialogFragment helpDialogFragment = new HelpDialogFragment();
-                helpDialogFragment.show(getSupportFragmentManager(), HelpDialogFragment.TAG);
+                showHelpMenu();
                 break;
             }
         }

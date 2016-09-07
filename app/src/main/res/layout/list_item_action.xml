@@ -1,35 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="80dp"
-              android:background="@drawable/row_selector"
-              android:gravity="center_vertical"
-              android:minHeight="80dp"
-              android:orientation="horizontal"
-              android:weightSum="8">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/row_selector"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingBottom="8dp"
+                android:paddingEnd="8dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingStart="8dp"
+                android:paddingTop="8dp">
 
     <ImageView
         android:id="@+id/list_item_action_image"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_width="@android:dimen/app_icon_size"
+        android:layout_height="@android:dimen/app_icon_size"
+        android:layout_centerVertical="true"
         android:layout_weight="2"
-        android:maxHeight="@android:dimen/app_icon_size"
-        android:maxWidth="@android:dimen/app_icon_size"
         android:padding="20dp"
-        android:scaleType="centerCrop"
+        android:scaleType="center"
         android:src="@android:drawable/ic_menu_call"/>
 
     <TextView
         android:id="@+id/list_item_action_text_view"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="6"
-        android:paddingEnd="10dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingStart="10dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_toRightOf="@+id/list_item_action_image"
         android:text="Unset"
-        android:textSize="20dp"
-        />
+        android:textSize="20dp"/>
 
-</LinearLayout>
+</RelativeLayout>

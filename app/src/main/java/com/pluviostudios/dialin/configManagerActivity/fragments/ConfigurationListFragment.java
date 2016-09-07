@@ -86,7 +86,7 @@ public class ConfigurationListFragment extends Fragment implements LoaderManager
 
             @Override
             public View newView(Context context, Cursor cursor, ViewGroup parent) {
-                return LayoutInflater.from(context).inflate(R.layout.config_list_item, parent, false);
+                return LayoutInflater.from(context).inflate(R.layout.list_item_config, parent, false);
             }
 
             @Override
@@ -133,21 +133,21 @@ public class ConfigurationListFragment extends Fragment implements LoaderManager
         if (view instanceof FloatingActionButton) {
             // The user is attempting to make a new configuration | view = FAB
 
-            EventBus.getDefault().post(new ConfigurationListFragmentEvent(ConfigurationListFragmentEvent.TYPE_NEW_CONFIGURATION, -1));
+            EventBus.getDefault().post(new ConfigurationListFragmentEvents.Outgoing.NewConfiguration());
 
         } else if (view instanceof ImageButton) {
             // The user is attempting to edit a configuration | view = edit configuration image button
 
             long configId = (long) ((ViewGroup) view.getParent()).getTag();
 
-            EventBus.getDefault().post(new ConfigurationListFragmentEvent(ConfigurationListFragmentEvent.TYPE_CONFIGURATION_EDIT, configId));
+            EventBus.getDefault().post(new ConfigurationListFragmentEvents.Outgoing.EditEvent(configId));
 
         } else {
             // The user is selecting a configuration | view = configuration list item
 
             long id = (long) view.getTag();
 
-            EventBus.getDefault().post(new ConfigurationListFragmentEvent(ConfigurationListFragmentEvent.TYPE_CONFIGURATION_SELECTED, id));
+            EventBus.getDefault().post(new ConfigurationListFragmentEvents.Outgoing.SelectedEvent(id));
 
         }
 

@@ -4,7 +4,6 @@ import android.Manifest;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
@@ -38,10 +37,8 @@ public class ActionToggleFlashlight extends Action {
     @Override
     public boolean onExecute() {
 
-        Log.d(TAG, "onExecute: starting camera");
-
         if (sCamera == null)
-            sCamera = Camera.open(1);
+            sCamera = Camera.open();
 
         Camera.Parameters p = sCamera.getParameters();
 
