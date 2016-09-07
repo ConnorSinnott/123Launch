@@ -9,7 +9,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.ActionManager;
@@ -60,8 +59,6 @@ public class ConfigurationManagerActivity extends AppCompatActivity {
 
         mTitlePageIndicator = (TitlePageIndicator) findViewById(R.id.activity_configuration_manager_titles);
         mViewPager = (ViewPager) findViewById(R.id.activity_configuration_manager_viewpager);
-
-        Toast.makeText(this, "123Go Debug Copy", Toast.LENGTH_SHORT).show();
 
         // Initialize action manager with this context
         ActionManager.initialize(this);
