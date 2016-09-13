@@ -70,6 +70,7 @@ public class ButtonsActivity extends AppCompatActivity {
     private int mWidgetButtonCount;
     private boolean mNewConfig;
     private boolean mLaunchOnLeft = false;
+    private boolean pendingApperanceChange = false;
     private int mLaunchButtonIndex;
 
     private Node mRootNode;
@@ -243,6 +244,12 @@ public class ButtonsActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         EventBus.getDefault().register(this);
+
+        if(pendingApperanceChange) {
+            pendingApperanceChange = false;
+            buildButtonsFragment();
+        }
+
     }
 
     @Override
@@ -541,6 +548,7 @@ public class ButtonsActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         switch (requestCode) {
 
             case AppearanceActivity.APPEARANCE_ACTIVITY_REQUEST_CODE: {
@@ -549,7 +557,7 @@ public class ButtonsActivity extends AppCompatActivity {
                     // If changes were made to the widget's appearance, rebuild the fragment
                     Bundle resultExtras = data.getExtras();
                     if (resultExtras.containsKey(AppearanceActivity.EXTRA_CHANGES_MADE) && resultExtras.getBoolean(EXTRA_CHANGES_MADE)) {
-                        buildButtonsFragment();
+                        pendingApperanceChange = true;
                     }
 
                 }

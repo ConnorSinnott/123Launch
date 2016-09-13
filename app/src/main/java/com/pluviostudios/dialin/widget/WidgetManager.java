@@ -11,8 +11,8 @@ import android.widget.RemoteViews;
 
 import com.google.common.primitives.Ints;
 import com.pluviostudios.dialin.R;
-import com.pluviostudios.dialin.buttonIconSet.ButtonIconSet;
-import com.pluviostudios.dialin.buttonIconSet.ButtonIconSetManager;
+import com.pluviostudios.dialin.buttonIconSet.AppearanceItem;
+import com.pluviostudios.dialin.buttonIconSet.AppearanceManager;
 import com.pluviostudios.dialin.data.Node;
 import com.pluviostudios.dialin.data.StorageManager;
 import com.pluviostudios.dialin.database.DBContract;
@@ -205,7 +205,7 @@ public class WidgetManager {
         ArrayList<Integer> backgroundIds = SupportedWidgetSizes.getWidgetButtonBackgroundIds(buttonCount);
         RemoteViews remoteViews = SupportedWidgetSizes.getWidgetRemoteView(context, buttonCount, vertical);
 
-        ButtonIconSet buttonIconSet = ButtonIconSetManager.getButtonIconSet(context, buttonCount);
+        AppearanceItem appearanceItem = AppearanceManager.getAppearanceItem(context);
 
         boolean launchPlaced = false;
         for (int i = 0; i < buttonCount; i++) {
@@ -224,10 +224,10 @@ public class WidgetManager {
                 }
 
                 // Set select highlight
-                remoteViews.setInt(buttonIds.get(i), "setBackgroundResource", buttonIconSet.getButtonHighlightStateDrawableResourceId());
+                remoteViews.setInt(buttonIds.get(i), "setBackgroundResource", appearanceItem.highlightItem.drawableResourceId);
 
                 // Set background
-                remoteViews.setImageViewUri(backgroundIds.get(i), buttonIconSet.getLauncherUri());
+                remoteViews.setImageViewUri(backgroundIds.get(i), appearanceItem.buttonSetItem.launcherIconUri);
 
                 remoteViews.setOnClickPendingIntent(buttonIds.get(i), generateButtonPendingIntent(context, appWidgetId, -1));
 
@@ -243,10 +243,10 @@ public class WidgetManager {
                 }
 
                 // Set select highlight
-                remoteViews.setInt(buttonIds.get(i), "setBackgroundResource", buttonIconSet.getButtonHighlightStateDrawableResourceId());
+                remoteViews.setInt(buttonIds.get(i), "setBackgroundResource", appearanceItem.highlightItem.drawableResourceId);
 
                 // Set background
-                remoteViews.setImageViewUri(backgroundIds.get(i), buttonIconSet.getIcon(relativeChildIndex));
+                remoteViews.setImageViewUri(backgroundIds.get(i), appearanceItem.buttonSetItem.buttonIconUris[relativeChildIndex]);
 
                 remoteViews.setOnClickPendingIntent(buttonIds.get(i), generateButtonPendingIntent(context, appWidgetId, relativeChildIndex));
 

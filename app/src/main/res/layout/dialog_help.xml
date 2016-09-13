@@ -65,7 +65,7 @@
                 android:layout_width="@android:dimen/app_icon_size"
                 android:layout_height="@android:dimen/app_icon_size"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_bblue"/>
+                android:src="@drawable/ic_button_holo_1"/>
 
             <TextView
                 android:layout_width="wrap_content"

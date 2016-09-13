@@ -6,7 +6,7 @@
                 android:padding="5dp">
 
     <include
-        android:id="@+id/fragment_edit_action_list_item"
+        android:id="@+id/fragment_edit_appearance_list_item"
         layout="@layout/list_item_action"
         />
 
@@ -17,7 +17,7 @@
         android:layout_above="@+id/fragment_edit_action_linearLayout"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/fragment_edit_action_list_item"
+        android:layout_below="@+id/fragment_edit_appearance_list_item"
         android:layout_marginLeft="3dp"
         android:layout_marginRight="3dp">
 

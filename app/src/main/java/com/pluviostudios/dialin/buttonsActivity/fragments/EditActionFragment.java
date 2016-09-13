@@ -73,7 +73,7 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
 
     private void initialize() {
         mNoConfigText = (TextView) mRoot.findViewById(R.id.fragment_edit_action_no_config);
-        mEditActionListItem = mRoot.findViewById(R.id.fragment_edit_action_list_item);
+        mEditActionListItem = mRoot.findViewById(R.id.fragment_edit_appearance_list_item);
         mListItemActionImageView = (ImageView) mRoot.findViewById(R.id.list_item_action_image);
         mListItemActionTextView = (TextView) mRoot.findViewById(R.id.list_item_action_text_view);
         mButtonOk = (Button) mRoot.findViewById(R.id.fragment_edit_action_ok);
@@ -229,7 +229,7 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
                 EventBus.getDefault().post(new EditActionFragmentEvents.Outgoing.OnCancel());
                 break;
 
-            case R.id.fragment_edit_action_list_item:
+            case R.id.fragment_edit_appearance_list_item:
 
                 IconListDialogFragment.Builder builder = new IconListDialogFragment.Builder(DIALOG_REQUEST_CODE);
                 for (Action x : ActionManager.getActions()) {
