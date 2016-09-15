@@ -2,8 +2,8 @@ package com.pluviostudios.dialin.configManagerActivity;
 
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -18,6 +18,7 @@ import com.pluviostudios.dialin.buttonsActivity.ButtonsActivity;
 import com.pluviostudios.dialin.configManagerActivity.fragments.ConfigurationListFragment;
 import com.pluviostudios.dialin.configManagerActivity.fragments.ConfigurationListFragmentEvents;
 import com.pluviostudios.dialin.data.StorageManager;
+import com.pluviostudios.dialin.database.DBContract;
 import com.pluviostudios.dialin.dialogFragments.IconListDialogFragment;
 import com.pluviostudios.dialin.dialogFragments.IconListDialogFragmentEvent;
 import com.pluviostudios.dialin.settings.SettingsActivity;
@@ -30,6 +31,9 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
+
+import static android.app.Activity.RESULT_OK;
+import static com.pluviostudios.dialin.appearanceActivity.AppearanceActivity.EXTRA_CHANGES_MADE;
 
 /**
  * Created by spectre on 8/2/16.
@@ -54,7 +58,7 @@ public class ConfigurationManagerActivity extends AppCompatActivity {
     // Due to this you'll see some annoying code snippits such as within getPageTitle() where I figure out whether to show 2 pages or 1. 5x1 or 4x1 or both.
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_configuration_manager);
 
@@ -198,12 +202,47 @@ public class ConfigurationManagerActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // If RESULT_OK
-        if (requestCode == ButtonsActivity.EDIT_CONFIG_RESULT_CODE && resultCode == RESULT_OK) {
+        switch (requestCode) {
 
-            ArrayList<Integer> affectedWidgetIds = data.getExtras().getIntegerArrayList(StorageManager.EXTRA_AFFECTED_APPWIDGETIDS);
-            if (affectedWidgetIds != null) {
-                WidgetManager.updateWidgets(this, affectedWidgetIds);
+            case AppearanceActivity.APPEARANCE_ACTIVITY_REQUEST_CODE: {
+                if (resultCode == RESULT_OK) {
+
+                    // If changes were made to the widget's appearance, rebuild the fragment
+                    Bundle resultExtras = data.getExtras();
+                    if (resultExtras.containsKey(AppearanceActivity.EXTRA_CHANGES_MADE) && resultExtras.getBoolean(EXTRA_CHANGES_MADE)) {
+
+                        Cursor c = getContentResolver().query(DBContract.WidgetsEntry.CONTENT_URI,
+                                new String[]{DBContract.WidgetsEntry.APP_WIDGET_ID_COL},
+                                null, null, null, null
+                        );
+
+                        if (c != null) {
+                            if (c.moveToFirst()) {
+                                do {
+                                    WidgetManager.updateWidgets(this, c.getInt(0));
+                                } while (c.moveToNext());
+                            }
+                            c.close();
+                        }
+
+                    }
+
+                }
+                break;
+            }
+
+            case ButtonsActivity.EDIT_CONFIG_RESULT_CODE: {
+
+                if (resultCode == RESULT_OK) {
+
+                    ArrayList<Integer> affectedWidgetIds = data.getExtras().getIntegerArrayList(StorageManager.EXTRA_AFFECTED_APPWIDGETIDS);
+                    if (affectedWidgetIds != null) {
+                        WidgetManager.updateWidgets(this, affectedWidgetIds);
+                    }
+
+                }
+
+                break;
             }
 
         }
@@ -227,7 +266,7 @@ public class ConfigurationManagerActivity extends AppCompatActivity {
             }
             case R.id.menu_appearance: {
                 Intent intent = new Intent(this, AppearanceActivity.class);
-                startActivity(intent);
+                startActivityForResult(intent, AppearanceActivity.APPEARANCE_ACTIVITY_REQUEST_CODE);
                 break;
             }
         }

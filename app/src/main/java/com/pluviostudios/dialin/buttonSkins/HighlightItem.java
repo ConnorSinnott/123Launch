@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin.buttonIconSet;
+package com.pluviostudios.dialin.buttonSkins;
 
 /**
  * Created by spectre on 9/13/16.

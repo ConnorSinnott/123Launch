@@ -2,9 +2,7 @@ package com.pluviostudios.dialin.data;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.pluviostudios.dialin.database.DBContract;
@@ -25,9 +23,6 @@ public class StorageManager {
 
     public static final String EXTRA_AFFECTED_APPWIDGETIDS = "extra_affected_appWidgetIds";
     public static final String EXTRA_SUCCESS = "extra_result";
-
-    public static final String PREF_CACHED_ID = "pref_cached_id";
-    public static final String PREF_CACHED_JSON = "pref_cached_json";
 
     public static Bundle saveNewConfiguration(Context context, String configurationTitle, int buttonCount, int launchButtonIndex, Node node) {
 
@@ -147,25 +142,7 @@ public class StorageManager {
 
         try {
 
-            String savedJson;
-
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            long cachedId = sharedPreferences.getLong(PREF_CACHED_ID, -1);
-
-            if (configurationId == cachedId) {
-
-                savedJson = sharedPreferences.getString(PREF_CACHED_JSON, null);
-
-            } else {
-
-                savedJson = FileManager.readFromFile(context, String.valueOf(configurationId));
-                sharedPreferences.edit()
-                        .putString(PREF_CACHED_JSON, savedJson)
-                        .putLong(PREF_CACHED_ID, configurationId)
-                        .apply();
-
-            }
-
+            String savedJson = FileManager.readFromFile(context, String.valueOf(configurationId));
             return JSONNodeConverter.loadNodeByPath(savedJson, path);
 
         } catch (JSONException e) {

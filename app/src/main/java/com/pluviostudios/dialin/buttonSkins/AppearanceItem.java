@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin.buttonIconSet;
+package com.pluviostudios.dialin.buttonSkins;
 
 /**
  * Created by spectre on 9/13/16.
@@ -8,11 +8,11 @@ public class AppearanceItem {
     public static final String TAG = "AppearanceItem";
 
     public HighlightItem highlightItem;
-    public ButtonSetItem buttonSetItem;
+    public SkinSetItem skinSetItem;
 
-    public AppearanceItem(HighlightItem highlightItem, ButtonSetItem buttonSetItem) {
+    public AppearanceItem(HighlightItem highlightItem, SkinSetItem skinSetItem) {
         this.highlightItem = highlightItem;
-        this.buttonSetItem = buttonSetItem;
+        this.skinSetItem = skinSetItem;
     }
 
 }

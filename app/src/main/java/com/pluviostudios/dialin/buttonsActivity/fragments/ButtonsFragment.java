@@ -15,8 +15,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.pluviostudios.dialin.buttonIconSet.AppearanceItem;
-import com.pluviostudios.dialin.buttonIconSet.AppearanceManager;
+import com.pluviostudios.dialin.buttonSkins.AppearanceItem;
+import com.pluviostudios.dialin.buttonSkins.AppearanceManager;
 import com.pluviostudios.dialin.utilities.Utilities;
 
 import org.greenrobot.eventbus.EventBus;
@@ -45,8 +45,6 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
     private Uri mLauncherIcon;
     private Uri[] mChildrenIcons;
 
-    private int mButtonCount;
-    private int mLaunchButtonIndex;
     private Integer mHoldIndex;
 
     public static ButtonsFragment buildButtonsFragment(int count) {
@@ -83,14 +81,59 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
         );
 
         // Set button count and determine launch index
-        mButtonCount = extras.getInt(EXTRA_COUNT);
+        int buttonCount = extras.getInt(EXTRA_COUNT);
 
         // Add support for launch on left
-        mLaunchButtonIndex = extras.getInt(EXTRA_LAUNCH_BUTTON_INDEX, mButtonCount - 1);
+        int launchButtonIndex = extras.getInt(EXTRA_LAUNCH_BUTTON_INDEX, buttonCount - 1);
 
         // Get appearance preferences
         mAppearanceItem = AppearanceManager.getAppearanceItem(getContext());
-        buildButtonsFragmentView();
+
+        // Generate the button view
+        mRoot = new LinearLayout(getContext());
+        mRoot.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        mRoot.setOrientation(LinearLayout.HORIZONTAL);
+        mRoot.setGravity(Gravity.CENTER);
+
+        mChildrenButtons = new ImageButton[buttonCount - 1];
+        boolean launchPlaced = false;
+        for (int i = 0; i < buttonCount; i++) {
+
+            FrameLayout buttonFrameLayout;
+            int relativeChildIndex = i - (launchPlaced ? 1 : 0);
+
+            ImageButton newImageButton;
+
+            // Determine which buttons get launcher icons vs standard icons
+            if (i == launchButtonIndex) {
+
+                launchPlaced = true;
+                buttonFrameLayout = generateLaunchButton();
+
+                newImageButton = (ImageButton) buttonFrameLayout.findViewWithTag("ImageButton");
+                newImageButton.setId(i);
+                newImageButton.setTag(-1);
+
+                mLauncherButton = newImageButton;
+
+            } else {
+
+                buttonFrameLayout = generateChildButton(relativeChildIndex);
+
+                newImageButton = (ImageButton) buttonFrameLayout.findViewWithTag("ImageButton");
+                newImageButton.setTag(relativeChildIndex);
+                newImageButton.setId(i);
+
+                mChildrenButtons[relativeChildIndex] = newImageButton;
+
+            }
+
+            newImageButton.setOnClickListener(this);
+            newImageButton.setOnLongClickListener(this);
+
+            mRoot.addView(buttonFrameLayout);
+
+        }
 
         // If savedInstanceState is not null, override the icons saved in init bundle with saved instance state
         if (savedInstanceState != null && savedInstanceState.getBoolean(SAVED_ICONS_EXIST)) {
@@ -158,58 +201,7 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
         super.onStop();
     }
 
-    private void buildButtonsFragmentView() {
-
-        // Generate the button view
-        mRoot = new LinearLayout(getContext());
-        mRoot.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        mRoot.setOrientation(LinearLayout.HORIZONTAL);
-        mRoot.setGravity(Gravity.CENTER);
-
-        mChildrenButtons = new ImageButton[mButtonCount - 1];
-        boolean launchPlaced = false;
-        for (int i = 0; i < mButtonCount; i++) {
-
-            FrameLayout buttonFrameLayout;
-            int relativeChildIndex = i - (launchPlaced ? 1 : 0);
-
-            ImageButton newImageButton;
-
-            // Determine which buttons get launcher icons vs standard icons
-            if (i == mLaunchButtonIndex) {
-
-                launchPlaced = true;
-                buttonFrameLayout = generateLaunchButton();
-
-                newImageButton = (ImageButton) buttonFrameLayout.findViewWithTag("ImageButton");
-                newImageButton.setId(i);
-                newImageButton.setTag(-1);
-
-                mLauncherButton = newImageButton;
-
-            } else {
-
-                buttonFrameLayout = generateChildButton(relativeChildIndex);
-
-                newImageButton = (ImageButton) buttonFrameLayout.findViewWithTag("ImageButton");
-                newImageButton.setTag(relativeChildIndex);
-                newImageButton.setId(i);
-
-                mChildrenButtons[relativeChildIndex] = newImageButton;
-
-            }
-
-            newImageButton.setOnClickListener(this);
-            newImageButton.setOnLongClickListener(this);
-
-            mRoot.addView(buttonFrameLayout);
-
-        }
-
-
-    }
-
-    private FrameLayout generateButtonFrameLayout(Context context, int buttonHighlightResourceId) {
+    private static FrameLayout generateButtonFrameLayout(Context context, int buttonHighlightResourceId) {
 
         // Determine Button Size
         final int buttonSize = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 70, context.getResources().getDisplayMetrics()));
@@ -241,14 +233,14 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
     private FrameLayout generateChildButton(int index) {
         FrameLayout generatedButton = generateButtonFrameLayout(getContext(), mAppearanceItem.highlightItem.drawableResourceId);
         ImageView backgroundImageView = (ImageView) generatedButton.findViewWithTag("BackgroundImageView");
-        backgroundImageView.setImageURI(mAppearanceItem.buttonSetItem.buttonIconUris[index]);
+        backgroundImageView.setImageURI(mAppearanceItem.skinSetItem.buttonIconUris[index]);
         return generatedButton;
     }
 
     private FrameLayout generateLaunchButton() {
         FrameLayout generatedButton = generateButtonFrameLayout(getContext(), mAppearanceItem.highlightItem.drawableResourceId);
         ImageView backgroundImageView = (ImageView) generatedButton.findViewWithTag("BackgroundImageView");
-        backgroundImageView.setImageURI(mAppearanceItem.buttonSetItem.launcherIconUri);
+        backgroundImageView.setImageURI(mAppearanceItem.skinSetItem.launcherIconUri);
         return generatedButton;
     }
 

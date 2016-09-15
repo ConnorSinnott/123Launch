@@ -6,7 +6,7 @@
                 android:padding="5dp">
 
     <TextView
-        android:id="@+id/activity_appearance_text_view"
+        android:id="@+id/activity_appearance_text_view_highlight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingLeft="6dp"
@@ -14,26 +14,42 @@
 
 
     <include
-        android:id="@+id/activity_appearance_list_item"
+        android:id="@+id/activity_appearance_list_item_highlight"
         layout="@layout/list_item_action"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/activity_appearance_text_view"
+        android:layout_below="@id/activity_appearance_text_view_highlight"
         />
 
     <View
         android:id="@+id/activity_appearance_divider"
         android:layout_width="match_parent"
         android:layout_height="2dp"
-        android:layout_below="@id/activity_appearance_list_item"
+        android:layout_below="@id/activity_appearance_list_item_highlight"
         android:background="@color/colorPrimary"/>
+
+    <TextView
+        android:id="@+id/activity_appearance_text_view_skin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/activity_appearance_divider"
+        android:paddingLeft="6dp"
+        android:paddingTop="5dp"
+        android:text="Skinset"/>
+
+    <include
+        android:id="@+id/activity_appearance_list_item_skin_set"
+        layout="@layout/list_item_action"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/activity_appearance_text_view_skin"
+        />
 
     <Button
         android:id="@+id/activity_appearance_button_save"
-        android:layout_alignParentBottom="true"
-        android:text="Save"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:text="Save"/>
 
 </RelativeLayout>

@@ -1,4 +1,4 @@
-package com.pluviostudios.dialin.buttonIconSet;
+package com.pluviostudios.dialin.buttonSkins;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -22,7 +22,7 @@ public class AppearanceManager {
 
     private static AppearanceItem sAppearanceItem;
     private static ArrayList<HighlightItem> mHighlights;
-    private static ArrayList<ButtonSetItem> mButtonSets;
+    private static ArrayList<SkinSetItem> mSkinSets;
 
     public static AppearanceItem getAppearanceItem(Context context) {
 
@@ -36,7 +36,7 @@ public class AppearanceManager {
                 String savedButtonSetTitle = sharedPreferences.getString(PREF_CURRENT_BUTTON_SET, "Holo");
 
                 HighlightItem currentHighlightItem = null;
-                ButtonSetItem currentButtonSetItem = null;
+                SkinSetItem currentSkinSetItem = null;
 
                 for (HighlightItem x : getHighlightItems(context)) {
                     if (x.title.equals(savedHighlightTitle)) {
@@ -45,25 +45,25 @@ public class AppearanceManager {
                     }
                 }
 
-                for (ButtonSetItem x : getButtonSets(context)) {
+                for (SkinSetItem x : getSkinSets(context)) {
                     if (x.title.equals(savedButtonSetTitle)) {
-                        currentButtonSetItem = x;
+                        currentSkinSetItem = x;
                         break;
                     }
                 }
 
-                if (currentButtonSetItem == null)
-                    throw new RuntimeException("ButtonSetItem with title " + savedButtonSetTitle + " could not be loaded");
+                if (currentSkinSetItem == null)
+                    throw new RuntimeException("SkinSetItem with title " + savedButtonSetTitle + " could not be loaded");
 
                 if (currentHighlightItem == null) {
                     throw new RuntimeException("HighlightItem with title " + savedHighlightTitle + " could not be loaded");
                 }
 
-                sAppearanceItem = new AppearanceItem(currentHighlightItem, currentButtonSetItem);
+                sAppearanceItem = new AppearanceItem(currentHighlightItem, currentSkinSetItem);
 
             } else {
 
-                sAppearanceItem = new AppearanceItem(getHighlightItems(context).get(0), getButtonSets(context).get(0));
+                sAppearanceItem = new AppearanceItem(getHighlightItems(context).get(0), getSkinSets(context).get(0));
 
             }
 
@@ -80,7 +80,7 @@ public class AppearanceManager {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         sharedPreferences.edit()
                 .putString(PREF_CURRENT_HIGHLIGHT, appearanceItem.highlightItem.title)
-                .putString(PREF_CURRENT_BUTTON_SET, appearanceItem.buttonSetItem.title)
+                .putString(PREF_CURRENT_BUTTON_SET, appearanceItem.skinSetItem.title)
                 .apply();
 
     }
@@ -98,9 +98,9 @@ public class AppearanceManager {
         return mHighlights;
     }
 
-    public static ArrayList<ButtonSetItem> getButtonSets(final Context context) {
-        if (mButtonSets == null) {
-            mButtonSets = new ArrayList<ButtonSetItem>() {{
+    public static ArrayList<SkinSetItem> getSkinSets(final Context context) {
+        if (mSkinSets == null) {
+            mSkinSets = new ArrayList<SkinSetItem>() {{
 
                 Uri button1 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_holo_1);
                 Uri button2 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_holo_2);
@@ -108,11 +108,20 @@ public class AppearanceManager {
                 Uri button4 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_holo_4);
                 Uri buttonLaunch = ActionTools.convertResourceToUri(context, R.drawable.ic_blaunch);
 
-                add(new ButtonSetItem("Holo", 5, buttonLaunch, button1, button2, button3, button4));
+                add(new SkinSetItem("Holo", 5, buttonLaunch, button1, button2, button3, button4));
+
+                button1 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_glass_1);
+                button2 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_glass_2);
+                button3 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_glass_3);
+                button4 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_glass_4);
+                buttonLaunch = ActionTools.convertResourceToUri(context, R.drawable.ic_blaunch);
+
+                add(new SkinSetItem("Glass", 5, buttonLaunch, button1, button2, button3, button4));
+
 
             }};
         }
-        return mButtonSets;
+        return mSkinSets;
     }
 
 

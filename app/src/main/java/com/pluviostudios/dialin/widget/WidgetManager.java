@@ -11,8 +11,8 @@ import android.widget.RemoteViews;
 
 import com.google.common.primitives.Ints;
 import com.pluviostudios.dialin.R;
-import com.pluviostudios.dialin.buttonIconSet.AppearanceItem;
-import com.pluviostudios.dialin.buttonIconSet.AppearanceManager;
+import com.pluviostudios.dialin.buttonSkins.AppearanceItem;
+import com.pluviostudios.dialin.buttonSkins.AppearanceManager;
 import com.pluviostudios.dialin.data.Node;
 import com.pluviostudios.dialin.data.StorageManager;
 import com.pluviostudios.dialin.database.DBContract;
@@ -227,7 +227,7 @@ public class WidgetManager {
                 remoteViews.setInt(buttonIds.get(i), "setBackgroundResource", appearanceItem.highlightItem.drawableResourceId);
 
                 // Set background
-                remoteViews.setImageViewUri(backgroundIds.get(i), appearanceItem.buttonSetItem.launcherIconUri);
+                remoteViews.setImageViewUri(backgroundIds.get(i), appearanceItem.skinSetItem.launcherIconUri);
 
                 remoteViews.setOnClickPendingIntent(buttonIds.get(i), generateButtonPendingIntent(context, appWidgetId, -1));
 
@@ -246,7 +246,7 @@ public class WidgetManager {
                 remoteViews.setInt(buttonIds.get(i), "setBackgroundResource", appearanceItem.highlightItem.drawableResourceId);
 
                 // Set background
-                remoteViews.setImageViewUri(backgroundIds.get(i), appearanceItem.buttonSetItem.buttonIconUris[relativeChildIndex]);
+                remoteViews.setImageViewUri(backgroundIds.get(i), appearanceItem.skinSetItem.buttonIconUris[relativeChildIndex]);
 
                 remoteViews.setOnClickPendingIntent(buttonIds.get(i), generateButtonPendingIntent(context, appWidgetId, relativeChildIndex));
 
