@@ -4,8 +4,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.pluviostudios.dialin.action.defaultActions.ActionLaunchApplication;
-import com.pluviostudios.dialin.action.defaultActions.ActionLaunchWebsite;
-import com.pluviostudios.dialin.action.defaultActions.ActionToggleFlashlight;
 import com.pluviostudios.dialin.action.defaultActions.EmptyAction;
 
 import java.util.ArrayList;
@@ -35,8 +33,6 @@ public class ActionManager {
             sActions = new ArrayList<Action>() {
                 {
                     add(new EmptyAction());
-                    add(new ActionToggleFlashlight());
-                    add(new ActionLaunchWebsite());
                     add(new ActionLaunchApplication());
                 }
             };

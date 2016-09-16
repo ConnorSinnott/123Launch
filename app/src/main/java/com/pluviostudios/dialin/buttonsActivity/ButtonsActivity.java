@@ -29,6 +29,7 @@ import com.pluviostudios.dialin.buttonsActivity.fragments.ButtonFragmentEvents;
 import com.pluviostudios.dialin.buttonsActivity.fragments.ButtonsFragment;
 import com.pluviostudios.dialin.buttonsActivity.fragments.EditActionFragment;
 import com.pluviostudios.dialin.buttonsActivity.fragments.EditActionFragmentEvents;
+import com.pluviostudios.dialin.buttonsActivity.fragments.EditShortcutFragment;
 import com.pluviostudios.dialin.data.JSONNodeConverter;
 import com.pluviostudios.dialin.data.Node;
 import com.pluviostudios.dialin.data.StorageManager;
@@ -372,24 +373,24 @@ public class ButtonsActivity extends AppCompatActivity {
         mNodeBeingEditedIndex = childIndex;
         Node editNode = mCurrentNode.getChild(childIndex);
 
-        EditActionFragment editActionFragment;
+        EditShortcutFragment editShortcutFragment;
 
         // Generate and setup the EditActionFragment
         if (editNode.hasAction()) {
 
             // If the node currently has an action, pass it as a parameter
-            editActionFragment = EditActionFragment.buildEditFragment(editNode.getAction());
+            editShortcutFragment = EditShortcutFragment.buildEditFragment(editNode.getAction());
 
         } else {
 
             // Otherwise, don't pass anything and EditActionFragment will create one
-            editActionFragment = EditActionFragment.buildEditFragment();
+            editShortcutFragment = EditShortcutFragment.buildEditFragment();
 
         }
 
         // Display EditActionFragment in the bottom frame
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.activity_buttons_bottom_frame, editActionFragment, EditActionFragment.TAG)
+                .replace(R.id.activity_buttons_bottom_frame, editShortcutFragment, EditActionFragment.TAG)
                 .commit();
 
     }

@@ -1,11 +1,8 @@
 package com.pluviostudios.dialin.buttonsActivity.fragments;
 
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,29 +12,21 @@ import android.widget.TextView;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
-import com.pluviostudios.dialin.action.ActionManager;
 import com.pluviostudios.dialin.action.ConfigurationFragment;
-import com.pluviostudios.dialin.action.defaultActions.EmptyAction;
-import com.pluviostudios.dialin.buttonsActivity.OnRequestPermissionResultEvent;
-import com.pluviostudios.dialin.dialogFragments.IconListDialogFragment;
-import com.pluviostudios.dialin.dialogFragments.IconListDialogFragmentEvent;
-import com.pluviostudios.dialin.utilities.Utilities;
+import com.pluviostudios.dialin.action.defaultActions.ActionLaunchApplication;
 
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 
 /**
- * Created by spectre on 7/27/16.
+ * Created by spectre on 9/16/16.
  */
-public class EditActionFragment extends Fragment implements View.OnClickListener {
+public class EditShortcutFragment extends Fragment implements View.OnClickListener {
 
-    public static final String TAG = "EditActionFragment";
+    public static final String TAG = "EditShortcutFragment";
     public static final String EXTRA_ACTION_ID = "extra_action_id";
     public static final String EXTRA_ACTION_ARGUMENTS = "extra_action_arguments";
-
-    public static final int DIALOG_REQUEST_CODE = 1987;
 
     private View mRoot;
     private TextView mNoConfigText;
@@ -49,14 +38,14 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
 
     protected Action mAction;
 
-    public static EditActionFragment buildEditFragment() {
-        EditActionFragment newFragment = new EditActionFragment();
+    public static EditShortcutFragment buildEditFragment() {
+        EditShortcutFragment newFragment = new EditShortcutFragment();
         return newFragment;
     }
 
-    public static EditActionFragment buildEditFragment(Action action) {
+    public static EditShortcutFragment buildEditFragment(Action action) {
 
-        EditActionFragment editFragment = buildEditFragment();
+        EditShortcutFragment editFragment = buildEditFragment();
 
         int actionId = action.getActionId();
         ArrayList<String> actionArguments = action.getActionParameters();
@@ -94,27 +83,15 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
             }
         }
 
+        mAction = new ActionLaunchApplication();
+
         if (extras != null) {
-
-            // If there are extras it means that an Action info was passed
-            Utilities.checkBundleForExpectedExtras(extras,
-                    EXTRA_ACTION_ID
-            );
-
-            // Get the actionID and create an instance of the action
-            int actionId = extras.getInt(EXTRA_ACTION_ID);
-            mAction = ActionManager.getInstanceOfAction(actionId);
 
             // Add arguments if they exist
             if (extras.containsKey(EXTRA_ACTION_ARGUMENTS)) {
                 ArrayList<String> actionArguments = extras.getStringArrayList(EXTRA_ACTION_ARGUMENTS);
                 mAction.setParameters(actionArguments);
             }
-
-        } else {
-
-            //Otherwise start with default action
-            mAction = new EmptyAction();
 
         }
 
@@ -137,23 +114,7 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
         super.onSaveInstanceState(outState);
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        EventBus.getDefault().register(this);
-    }
-
-    @Override
-    public void onStop() {
-        EventBus.getDefault().unregister(this);
-        super.onStop();
-    }
-
     protected void updateCurrentAction() {
-
-        // Update the header with action name and icon
-        mListItemActionTextView.setText(mAction.getActionName());
-        mListItemActionImageView.setImageURI(mAction.getActionImageUri());
 
         // If the action does not have a configuration fragment, than delete the currently displayed fragment, it does not belong there anymore
         if (!mAction.hasConfigurationFragment()) {
@@ -220,57 +181,14 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
 
         switch (view.getId()) {
             case R.id.fragment_edit_action_ok:
-
-                checkPermissions();
-
+                finishConfigure();
                 break;
 
             case R.id.fragment_edit_action_cancel:
                 EventBus.getDefault().post(new EditActionFragmentEvents.Outgoing.OnCancel());
                 break;
 
-            case R.id.fragment_edit_action_list_item:
-
-                IconListDialogFragment.Builder builder = new IconListDialogFragment.Builder(DIALOG_REQUEST_CODE);
-                for (Action x : ActionManager.getActions()) {
-                    builder.addItem(x.getActionName(), x.getActionImageUri());
-                }
-                builder.build().show(getFragmentManager(), IconListDialogFragment.TAG);
-
-                break;
-
         }
-
-    }
-
-    protected void checkPermissions() {
-
-        if (mAction.getRequiredPermissions() != null && mAction.getRequiredPermissions().length > 0) {
-
-            String[] requiredPermissions = mAction.getRequiredPermissions();
-
-            for (int i = 0; i < requiredPermissions.length; i++) {
-
-                String currRequiredPermission = requiredPermissions[i];
-
-                if (ContextCompat.checkSelfPermission(getActivity(), currRequiredPermission) != PackageManager.PERMISSION_GRANTED) {
-
-                    ActivityCompat.requestPermissions(getActivity(), new String[]{currRequiredPermission}, i);
-
-                    return;
-
-                }
-
-            }
-
-            finishConfigure();
-
-        } else {
-
-            finishConfigure();
-
-        }
-
 
     }
 
@@ -280,39 +198,6 @@ public class EditActionFragment extends Fragment implements View.OnClickListener
         mAction.saveParameters();
 
         EventBus.getDefault().post(new EditActionFragmentEvents.Outgoing.OnConfigured(mAction));
-
-    }
-
-    @Subscribe
-    public void onIconListDialogFragmentEvent(IconListDialogFragmentEvent event) {
-
-        if (event.requestCode == DIALOG_REQUEST_CODE) {
-
-            // On item selected, get a new instance of the action so the list objects remain in tact
-            int actionId = ActionManager.getActions().get(event.position).getActionId();
-            mAction = ActionManager.getInstanceOfAction(actionId);
-            updateCurrentAction();
-
-        }
-
-    }
-
-    @Subscribe
-    public void onRequestPermissionResultEvent(OnRequestPermissionResultEvent event) {
-
-        if (event.grantResults.length > 0
-                && event.grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-            checkPermissions();
-
-            // permission was granted, yay! Do the
-            // contacts-related task you need to do.
-
-        } else {
-
-            // permission denied, boo! Disable the
-            // functionality that depends on this permission.
-        }
 
     }
 
