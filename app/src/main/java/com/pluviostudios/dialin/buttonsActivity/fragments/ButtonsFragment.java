@@ -33,6 +33,7 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
     public static final String EXTRA_LAUNCH_BUTTON_INDEX = "extra_launch_button_index";
     public static final String EXTRA_LAUNCH_ICON_URI = "extra_launch_icon_uri";
     public static final String EXTRA_CHILD_ICON_URIS = "extra_child_icon_uris";
+    public static final String EXTRA_HOLD_ENABLED = "extra_hold_enabled";
 
     public static final String SAVED_HOLD_POSITION = "saved_hold_position";
     public static final String SAVED_ICONS_EXIST = "saved_icons_exit";
@@ -46,6 +47,7 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
     private Uri[] mChildrenIcons;
 
     private Integer mHoldIndex;
+    private boolean mHoldEnabled;
 
     public static ButtonsFragment buildButtonsFragment(int count) {
         ButtonsFragment fragment = new ButtonsFragment();
@@ -85,6 +87,8 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
         // Add support for launch on left
         int launchButtonIndex = extras.getInt(EXTRA_LAUNCH_BUTTON_INDEX, buttonCount - 1);
+
+        mHoldEnabled = extras.getBoolean(EXTRA_HOLD_ENABLED, true);
 
         // Get appearance preferences
         mAppearanceItem = AppearanceManager.getAppearanceItem(getContext());
@@ -266,6 +270,9 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
 
     public void setHoldOnButton(int index) {
 
+        if (!mHoldEnabled)
+            return;
+
         // Set hold image
         if (mHoldIndex != null) {
             clearHold();
@@ -279,6 +286,10 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
     }
 
     private void clearHold() {
+
+        if (!mHoldEnabled)
+            return;
+
         // Reset hold image
         if (mHoldIndex != null) {
 
@@ -287,6 +298,7 @@ public class ButtonsFragment extends Fragment implements View.OnClickListener, V
             mHoldIndex = null;
 
         }
+
     }
 
     @Subscribe

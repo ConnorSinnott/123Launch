@@ -1,14 +1,14 @@
 package com.pluviostudios.dialin.buttonsActivity;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.database.Cursor;
+import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -19,23 +19,27 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import com.pluviostudios.dialin.R;
-import com.pluviostudios.dialin.action.defaultActions.EmptyAction;
+import com.pluviostudios.dialin.action.Action;
+import com.pluviostudios.dialin.action.ActionTools;
+import com.pluviostudios.dialin.action.defaultActions.ActionLaunchApplication;
 import com.pluviostudios.dialin.appearanceActivity.AppearanceActivity;
 import com.pluviostudios.dialin.buttonsActivity.fragments.ButtonFragmentEvents;
 import com.pluviostudios.dialin.buttonsActivity.fragments.ButtonsFragment;
-import com.pluviostudios.dialin.buttonsActivity.fragments.EditActionFragment;
-import com.pluviostudios.dialin.buttonsActivity.fragments.EditActionFragmentEvents;
-import com.pluviostudios.dialin.buttonsActivity.fragments.EditShortcutFragment;
 import com.pluviostudios.dialin.data.JSONNodeConverter;
 import com.pluviostudios.dialin.data.Node;
 import com.pluviostudios.dialin.data.StorageManager;
 import com.pluviostudios.dialin.database.DBContract;
+import com.pluviostudios.dialin.dialogFragments.IconListDialogAdapter;
 import com.pluviostudios.dialin.settings.SettingsActivity;
-import com.pluviostudios.dialin.utilities.HelpDialogFragment;
+import com.pluviostudios.dialin.utilities.AsyncGetApplicationInfo;
 import com.pluviostudios.dialin.utilities.Utilities;
 
 import org.greenrobot.eventbus.EventBus;
@@ -44,10 +48,11 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 
+import static com.pluviostudios.dialin.action.ActionManager.getContext;
 import static com.pluviostudios.dialin.appearanceActivity.AppearanceActivity.APPEARANCE_ACTIVITY_REQUEST_CODE;
 import static com.pluviostudios.dialin.appearanceActivity.AppearanceActivity.EXTRA_CHANGES_MADE;
 
-public class ButtonsActivity extends AppCompatActivity {
+public class ButtonsActivity extends AppCompatActivity implements View.OnClickListener {
 
     public static final String TAG = "ButtonsActivity";
 
@@ -62,17 +67,25 @@ public class ButtonsActivity extends AppCompatActivity {
     public static final String SAVED_EDIT_NODE_INDEX = "saved_edit_node_index";
     public static final String SAVED_TEMP_JSON = "saved_temp_json";
 
-    public static final String PREF_FIRST_LAUNCH = "pref_first_launch";
-
     private Button mButtonOk;
+    private Button mButtonInsert;
+    private Button mButtonDelete;
+    private TextView mListItemTextView;
+    private ImageView mListItemImageView;
+    private ListView mListView;
 
     private long mConfigID;
     private String mConfigTitle;
     private int mWidgetButtonCount;
-    private boolean mNewConfig;
-    private boolean mLaunchOnLeft = false;
-    private boolean pendingApperanceChange = false;
     private int mLaunchButtonIndex;
+    private boolean mInsertMode = true;
+    private boolean mLaunchOnLeft = false;
+    private boolean mNewConfig;
+    private boolean pendingAppearanceChange = false;
+
+    private ArrayList<ApplicationInfo> mApplicationInfoList;
+    private ApplicationInfo mCurrentApplicationInfo;
+    private ActionLaunchApplication mGeneratedAction;
 
     private Node mRootNode;
     private Node mCurrentNode = mRootNode;
@@ -124,7 +137,16 @@ public class ButtonsActivity extends AppCompatActivity {
     }
 
     private void initialize() {
+
+        View listItemView = findViewById(R.id.activity_buttons_list_item);
+        mListItemImageView = (ImageView) listItemView.findViewById(R.id.list_item_action_image);
+        mListItemTextView = (TextView) listItemView.findViewById(R.id.list_item_action_text_view);
+
+        mListView = (ListView) findViewById(R.id.activity_buttons_list_view);
         mButtonOk = (Button) findViewById(R.id.activity_buttons_save_button);
+        mButtonDelete = (Button) findViewById(R.id.activity_buttons_delete_button);
+        mButtonInsert = (Button) findViewById(R.id.activity_buttons_insert_button);
+
     }
 
     @Override
@@ -200,20 +222,11 @@ public class ButtonsActivity extends AppCompatActivity {
         }
 
         // Set OK button to save changes to config file and send RESULT_OK to ConfigurationManagerActivity
-        mButtonOk.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finishButtonConfiguration();
-            }
-        });
+        mButtonOk.setOnClickListener(this);
+        mButtonInsert.setOnClickListener(this);
+        mButtonDelete.setOnClickListener(this);
 
-
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        if (sharedPreferences.getBoolean(PREF_FIRST_LAUNCH, true)) {
-            sharedPreferences.edit().putBoolean(PREF_FIRST_LAUNCH, false).apply();
-            showHelpMenu();
-        }
-
+        loadApplicationList();
 
     }
 
@@ -246,8 +259,8 @@ public class ButtonsActivity extends AppCompatActivity {
         super.onStart();
         EventBus.getDefault().register(this);
 
-        if(pendingApperanceChange) {
-            pendingApperanceChange = false;
+        if (pendingAppearanceChange) {
+            pendingAppearanceChange = false;
             buildButtonsFragment();
         }
 
@@ -259,10 +272,66 @@ public class ButtonsActivity extends AppCompatActivity {
         super.onStop();
     }
 
-    private void buildButtonsFragment() {
+    private void loadApplicationList() {
 
-        // Clear edit menu if it is open
-        clearEditMenu();
+        final ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Loading Applications");
+        progressDialog.show();
+
+        new AsyncGetApplicationInfo(this) {
+
+            @Override
+            protected void onPostExecute(ArrayList<ApplicationInfo> applicationInfoList) {
+
+                mApplicationInfoList = applicationInfoList;
+                mCurrentApplicationInfo = applicationInfoList.get(0);
+                updateApplicationInfo();
+                progressDialog.dismiss();
+
+                IconListDialogAdapter.Builder builder = new IconListDialogAdapter.Builder();
+                for (ApplicationInfo x : mApplicationInfoList) {
+
+                    String applicationName = ActionTools.getForeignApplicationNameFromInfo(getContext(), x);
+                    Uri applicationUri = ActionTools.getForeignApplicationImageUriFromInfo(x);
+                    builder.addItem(applicationName, applicationUri);
+
+                }
+                mListView.setAdapter(builder.build());
+                mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                        mCurrentApplicationInfo = mApplicationInfoList.get(position);
+                        updateApplicationInfo();
+
+                    }
+                });
+
+            }
+
+        }.execute();
+
+    }
+
+    private void updateApplicationInfo() {
+
+        String applicationName = ActionTools.getForeignApplicationNameFromInfo(getContext(), mCurrentApplicationInfo);
+        Uri applicationUri = ActionTools.getForeignApplicationImageUriFromInfo(mCurrentApplicationInfo);
+
+        mListItemImageView.setImageURI(applicationUri);
+        mListItemTextView.setText(applicationName);
+
+        mGeneratedAction = new ActionLaunchApplication();
+        ArrayList<String> params = new ArrayList<>();
+        params.add(mCurrentApplicationInfo.packageName);
+        params.add(applicationName);
+        params.add(applicationUri.toString());
+        mGeneratedAction.setParameters(params);
+
+    }
+
+    private void buildButtonsFragment() {
 
         // Generate and place ButtonsFragment in top frame
         ButtonsFragment buttonsFragment;
@@ -275,11 +344,18 @@ public class ButtonsActivity extends AppCompatActivity {
         }
 
         buttonsFragment.getArguments().putInt(ButtonsFragment.EXTRA_LAUNCH_BUTTON_INDEX, mLaunchButtonIndex);
+        buttonsFragment.getArguments().putBoolean(ButtonsFragment.EXTRA_HOLD_ENABLED, false);
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.activity_buttons_top_frame, buttonsFragment, ButtonsFragment.TAG)
                 .commit();
 
+    }
+
+    private void updateButtonsFragment() {
+        EventBus.getDefault().post(new ButtonFragmentEvents.Incoming.ButtonsFragmentUpdateEvent(
+                getCurrentLauncherIcon(),
+                getCurrentChildIcons()));
     }
 
     public void showRenameDialog() {
@@ -361,73 +437,55 @@ public class ButtonsActivity extends AppCompatActivity {
 
     }
 
+    private void setInsertMode(boolean insertModeEnabled) {
+        mInsertMode = insertModeEnabled;
 
-    private void updateButtonsFragment() {
-        EventBus.getDefault().post(new ButtonFragmentEvents.Incoming.ButtonsFragmentUpdateEvent(
-                getCurrentLauncherIcon(),
-                getCurrentChildIcons()));
+        Button buttonToHighlight = insertModeEnabled ? mButtonInsert : mButtonDelete;
+        Button buttonToDeselect = insertModeEnabled ? mButtonDelete : mButtonInsert;
+
+        buttonToHighlight.getBackground().setColorFilter(getResources().getColor(R.color.colorAccent), PorterDuff.Mode.MULTIPLY);
+        buttonToDeselect.getBackground().clearColorFilter();
     }
 
-    private void showEditMenu(int childIndex) {
-
-        mNodeBeingEditedIndex = childIndex;
-        Node editNode = mCurrentNode.getChild(childIndex);
-
-        EditShortcutFragment editShortcutFragment;
-
-        // Generate and setup the EditActionFragment
-        if (editNode.hasAction()) {
-
-            // If the node currently has an action, pass it as a parameter
-            editShortcutFragment = EditShortcutFragment.buildEditFragment(editNode.getAction());
-
-        } else {
-
-            // Otherwise, don't pass anything and EditActionFragment will create one
-            editShortcutFragment = EditShortcutFragment.buildEditFragment();
-
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.activity_buttons_save_button: {
+                finishButtonConfiguration();
+                break;
+            }
+            case R.id.activity_buttons_insert_button: {
+                setInsertMode(true);
+                break;
+            }
+            case R.id.activity_buttons_delete_button: {
+                setInsertMode(false);
+                break;
+            }
         }
-
-        // Display EditActionFragment in the bottom frame
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.activity_buttons_bottom_frame, editShortcutFragment, EditActionFragment.TAG)
-                .commit();
-
-    }
-
-    private void clearEditMenu() {
-
-        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.activity_buttons_bottom_frame);
-
-        if (fragment != null) {
-            // Remove EditActionFragment
-            getSupportFragmentManager().beginTransaction().remove(fragment).commit();
-
-            EventBus.getDefault().post(new ButtonFragmentEvents.Incoming.ButtonsFragmentClearHoldEvent());
-
-        }
-        mNodeBeingEditedIndex = null;
-
-    }
-
-    private void showHelpMenu() {
-        HelpDialogFragment helpDialogFragment = new HelpDialogFragment();
-        helpDialogFragment.show(getSupportFragmentManager(), HelpDialogFragment.TAG);
     }
 
     @Subscribe
     public void onButtonsFragmentClick(ButtonFragmentEvents.Outgoing.ClickEvent clickEvent) {
 
-        mCurrentNode = mCurrentNode.getChild(clickEvent.index);
-        mCurrentPath.add(clickEvent.index);
+        Action newAction = null;
+
+        if (mCurrentApplicationInfo != null && mInsertMode) {
+            newAction = mGeneratedAction;
+        }
+
+        mCurrentNode.getChild(clickEvent.index).setAction(newAction);
         updateButtonsFragment();
-        clearEditMenu();
 
     }
 
     @Subscribe
     public void onButtonsFragmentLongClick(ButtonFragmentEvents.Outgoing.LongClickEvent clickEvent) {
-        showEditMenu(clickEvent.index);
+
+        mCurrentNode = mCurrentNode.getChild(clickEvent.index);
+        mCurrentPath.add(clickEvent.index);
+        updateButtonsFragment();
+
     }
 
     @Subscribe
@@ -446,35 +504,7 @@ public class ButtonsActivity extends AppCompatActivity {
         updateButtonsFragment();
 
         // Clear edit menu if open
-        clearEditMenu();
-
-    }
-
-    @Subscribe
-    public void onEditActionFragmentConfigured(EditActionFragmentEvents.Outgoing.OnConfigured event) {
-
-        // Once action has been setup through EditActionFragment, assign the new action to this node
-        Node editNode = mCurrentNode.getChild(mNodeBeingEditedIndex);
-        if (event.action instanceof EmptyAction) {
-            editNode.setAction(null);
-        } else {
-            editNode.setAction(event.action);
-        }
-
-        // Update Buttons Fragment to display the new action
-        updateButtonsFragment();
-
-        // Exit EditActionFragment
-        clearEditMenu();
-
-
-    }
-
-    @Subscribe
-    public void onEditActionFragmentCanceled(EditActionFragmentEvents.Outgoing.OnCancel event) {
-
-        // Exit EditActionFragment
-        clearEditMenu();
+//        clearEditMenu();
 
     }
 
@@ -509,15 +539,32 @@ public class ButtonsActivity extends AppCompatActivity {
                 startActivity(intent);
                 break;
             }
-            case R.id.menu_activity_configuration_help: {
-                showHelpMenu();
-                break;
-            }
         }
         return true;
     }
 
-    // Save the configuration file and finish activity
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        switch (requestCode) {
+
+            case AppearanceActivity.APPEARANCE_ACTIVITY_REQUEST_CODE: {
+                if (resultCode == RESULT_OK) {
+
+                    // If changes were made to the widget's appearance, rebuild the fragment
+                    Bundle resultExtras = data.getExtras();
+                    if (resultExtras.containsKey(AppearanceActivity.EXTRA_CHANGES_MADE) && resultExtras.getBoolean(EXTRA_CHANGES_MADE)) {
+                        pendingAppearanceChange = true;
+                    }
+
+                }
+                break;
+            }
+
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
     private void finishButtonConfiguration() {
 
         // If changes have been made
@@ -547,31 +594,5 @@ public class ButtonsActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        switch (requestCode) {
-
-            case AppearanceActivity.APPEARANCE_ACTIVITY_REQUEST_CODE: {
-                if (resultCode == RESULT_OK) {
-
-                    // If changes were made to the widget's appearance, rebuild the fragment
-                    Bundle resultExtras = data.getExtras();
-                    if (resultExtras.containsKey(AppearanceActivity.EXTRA_CHANGES_MADE) && resultExtras.getBoolean(EXTRA_CHANGES_MADE)) {
-                        pendingApperanceChange = true;
-                    }
-
-                }
-                break;
-            }
-
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        EventBus.getDefault().post(new OnRequestPermissionResultEvent(requestCode, permissions, grantResults));
-    }
 
 }

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.pluviostudios.dialin.action.defaultActions.ActionLaunchApplication;
-import com.pluviostudios.dialin.action.defaultActions.EmptyAction;
 
 import java.util.ArrayList;
 
@@ -32,7 +31,6 @@ public class ActionManager {
         if (sActions == null) {
             sActions = new ArrayList<Action>() {
                 {
-                    add(new EmptyAction());
                     add(new ActionLaunchApplication());
                 }
             };

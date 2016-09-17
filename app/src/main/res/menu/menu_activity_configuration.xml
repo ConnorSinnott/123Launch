@@ -9,11 +9,6 @@
         app:showAsAction="always"/>
 
     <item
-        android:id="@+id/menu_activity_configuration_help"
-        android:title="Help"
-        app:showAsAction="always"/>
-
-    <item
         android:id="@+id/menu_main_switch_launch_side"
         android:title="Switch launch side"
         app:showAsAction="never"/>

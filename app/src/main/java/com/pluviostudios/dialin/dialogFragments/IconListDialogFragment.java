@@ -11,12 +11,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 
-import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.ActionTools;
 import com.pluviostudios.dialin.utilities.Utilities;
 
@@ -75,7 +71,12 @@ public class IconListDialogFragment extends DialogFragment {
             getDialog().setTitle(dialogTitle);
         }
 
-        listView.setAdapter(new IconListDialogAdapter());
+        IconListDialogAdapter.Builder iconListDialogAdapterBuilder = new IconListDialogAdapter.Builder();
+        for (int i = 0; i < titleList.size(); i++) {
+            iconListDialogAdapterBuilder.addItem(titleList.get(i), uriList.get(i));
+        }
+
+        listView.setAdapter(iconListDialogAdapterBuilder.build());
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
@@ -87,41 +88,6 @@ public class IconListDialogFragment extends DialogFragment {
         });
 
         return listView;
-
-    }
-
-    private class IconListDialogAdapter extends BaseAdapter {
-
-        @Override
-        public int getCount() {
-            return titleList.size();
-        }
-
-        @Override
-        public Object getItem(int i) {
-            return null;
-        }
-
-        @Override
-        public long getItemId(int i) {
-            return i;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-
-            if (convertView == null)
-                convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_action, parent, false);
-
-            Uri displayUri = uriList.get(position);
-            String displayName = titleList.get(position);
-
-            ((ImageView) convertView.findViewById(R.id.list_item_action_image)).setImageURI(displayUri);
-            ((TextView) convertView.findViewById(R.id.list_item_action_text_view)).setText(displayName);
-
-            return convertView;
-
-        }
 
     }
 
