@@ -24,7 +24,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
@@ -68,17 +67,16 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
     public static final String SAVED_TEMP_JSON = "saved_temp_json";
 
     private Button mButtonOk;
-    private Button mButtonInsert;
-    private Button mButtonDelete;
-    private TextView mListItemTextView;
-    private ImageView mListItemImageView;
+    private View mButtonInsert;
+    private View mButtonDelete;
+    private ImageView mButtonInsertImageView;
     private ListView mListView;
 
     private long mConfigID;
     private String mConfigTitle;
     private int mWidgetButtonCount;
     private int mLaunchButtonIndex;
-    private boolean mInsertMode = true;
+    private boolean mInsertMode;
     private boolean mLaunchOnLeft = false;
     private boolean mNewConfig;
     private boolean pendingAppearanceChange = false;
@@ -138,14 +136,12 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
 
     private void initialize() {
 
-        View listItemView = findViewById(R.id.activity_buttons_list_item);
-        mListItemImageView = (ImageView) listItemView.findViewById(R.id.list_item_action_image);
-        mListItemTextView = (TextView) listItemView.findViewById(R.id.list_item_action_text_view);
-
         mListView = (ListView) findViewById(R.id.activity_buttons_list_view);
         mButtonOk = (Button) findViewById(R.id.activity_buttons_save_button);
-        mButtonDelete = (Button) findViewById(R.id.activity_buttons_delete_button);
-        mButtonInsert = (Button) findViewById(R.id.activity_buttons_insert_button);
+        mButtonDelete = findViewById(R.id.activity_buttons_delete_button);
+        mButtonInsert = findViewById(R.id.activity_buttons_insert_button);
+
+        mButtonInsertImageView = (ImageView) mButtonInsert.findViewById(R.id.activity_buttons_insert_button_image_view);
 
     }
 
@@ -227,6 +223,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
         mButtonDelete.setOnClickListener(this);
 
         loadApplicationList();
+        setInsertMode(true);
 
     }
 
@@ -319,8 +316,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
         String applicationName = ActionTools.getForeignApplicationNameFromInfo(getContext(), mCurrentApplicationInfo);
         Uri applicationUri = ActionTools.getForeignApplicationImageUriFromInfo(mCurrentApplicationInfo);
 
-        mListItemImageView.setImageURI(applicationUri);
-        mListItemTextView.setText(applicationName);
+        mButtonInsertImageView.setImageURI(applicationUri);
 
         mGeneratedAction = new ActionLaunchApplication();
         ArrayList<String> params = new ArrayList<>();
@@ -440,8 +436,8 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
     private void setInsertMode(boolean insertModeEnabled) {
         mInsertMode = insertModeEnabled;
 
-        Button buttonToHighlight = insertModeEnabled ? mButtonInsert : mButtonDelete;
-        Button buttonToDeselect = insertModeEnabled ? mButtonDelete : mButtonInsert;
+        View buttonToHighlight = insertModeEnabled ? mButtonInsert : mButtonDelete;
+        View buttonToDeselect = insertModeEnabled ? mButtonDelete : mButtonInsert;
 
         buttonToHighlight.getBackground().setColorFilter(getResources().getColor(R.color.colorAccent), PorterDuff.Mode.MULTIPLY);
         buttonToDeselect.getBackground().clearColorFilter();

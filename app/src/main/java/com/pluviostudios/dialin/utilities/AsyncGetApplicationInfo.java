@@ -41,7 +41,7 @@ public class AsyncGetApplicationInfo extends AsyncTask<Void, Void, ArrayList<App
         }
 
         // Get Application info list and sort it alphabetically
-        Collections.sort(applicationInfoList, new Comparator<ApplicationInfo>() {
+        Collections.sort(listItems, new Comparator<ApplicationInfo>() {
             @Override
             public int compare(ApplicationInfo applicationInfo, ApplicationInfo t1) {
                 String leftName = ActionTools.getForeignApplicationNameFromInfo(mContext, applicationInfo);
