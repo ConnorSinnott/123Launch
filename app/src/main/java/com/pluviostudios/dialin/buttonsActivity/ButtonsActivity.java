@@ -24,6 +24,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.pluviostudios.dialin.R;
 import com.pluviostudios.dialin.action.Action;
@@ -71,6 +72,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
     private View mButtonDelete;
     private ImageView mButtonInsertImageView;
     private ListView mListView;
+    private TextView mPathTextView;
 
     private long mConfigID;
     private String mConfigTitle;
@@ -140,6 +142,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
         mButtonOk = (Button) findViewById(R.id.activity_buttons_save_button);
         mButtonDelete = findViewById(R.id.activity_buttons_delete_button);
         mButtonInsert = findViewById(R.id.activity_buttons_insert_button);
+        mPathTextView = (TextView) findViewById(R.id.activity_buttons_textview_path);
 
         mButtonInsertImageView = (ImageView) mButtonInsert.findViewById(R.id.activity_buttons_insert_button_image_view);
 
@@ -222,6 +225,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
         mButtonInsert.setOnClickListener(this);
         mButtonDelete.setOnClickListener(this);
 
+        updatePath();
         loadApplicationList();
         setInsertMode(true);
 
@@ -349,9 +353,19 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     private void updateButtonsFragment() {
+        updatePath();
         EventBus.getDefault().post(new ButtonFragmentEvents.Incoming.ButtonsFragmentUpdateEvent(
                 getCurrentLauncherIcon(),
                 getCurrentChildIcons()));
+    }
+
+    private void updatePath() {
+        String path = "";
+        for (Integer x : mCurrentPath) {
+            path += " -> " + (x + 1);
+        }
+
+        mPathTextView.setText(getResources().getString(R.string.path, path));
     }
 
     public void showRenameDialog() {
@@ -439,7 +453,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
         View buttonToHighlight = insertModeEnabled ? mButtonInsert : mButtonDelete;
         View buttonToDeselect = insertModeEnabled ? mButtonDelete : mButtonInsert;
 
-        buttonToHighlight.getBackground().setColorFilter(getResources().getColor(R.color.colorAccent), PorterDuff.Mode.MULTIPLY);
+        buttonToHighlight.getBackground().setColorFilter(getResources().getColor(R.color.colorAccentTransparent), PorterDuff.Mode.MULTIPLY);
         buttonToDeselect.getBackground().clearColorFilter();
     }
 

@@ -20,29 +20,44 @@
         android:paddingTop="10dp"
         />
 
-
-    <View
-        android:id="@+id/activity_buttons_divider"
-        android:layout_width="match_parent"
-        android:layout_height="4dp"
-        android:layout_alignBottom="@+id/activity_buttons_top_frame"
-        android:background="@color/colorPrimary"
-        />
-
     <TextView
         android:id="@+id/activity_buttons_instructions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/activity_buttons_divider"
         android:layout_centerHorizontal="true"
-        android:text="Click to assign, long click to navigate"/>
+        android:text="Click to insert or clear, long click to navigate"/>
+
+    <View
+        android:id="@+id/activity_buttons_divider"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_alignBottom="@+id/activity_buttons_top_frame"
+        android:background="@color/colorPrimary"
+        />
+
+    <TextView
+        android:id="@+id/activity_buttons_textview_path"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/activity_buttons_divider"
+        android:text="Path:"/>
+
+    <View
+        android:id="@+id/activity_buttons_divider_3"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_below="@id/activity_buttons_textview_path"
+        android:background="@color/colorPrimary"
+        />
+
 
     <LinearLayout
-        android:layout_marginTop="4dp"
         android:id="@+id/activity_buttons_controls"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/activity_buttons_divider"
+        android:layout_below="@id/activity_buttons_divider_3"
+        android:layout_marginTop="4dp"
         android:weightSum="2">
 
         <LinearLayout
