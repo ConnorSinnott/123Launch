@@ -3,6 +3,6 @@
 
     <item
         android:id="@+id/menu_appearance"
-        android:title="Widget Appearance"/>
+        android:title="@string/widget_appearance"/>
 
 </menu>

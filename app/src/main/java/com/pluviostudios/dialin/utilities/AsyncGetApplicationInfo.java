@@ -16,7 +16,7 @@ import java.util.Comparator;
  */
 public class AsyncGetApplicationInfo extends AsyncTask<Void, Void, ArrayList<ApplicationInfo>> {
 
-    private Context mContext;
+    private final Context mContext;
 
     public AsyncGetApplicationInfo(Context context) {
         mContext = context;

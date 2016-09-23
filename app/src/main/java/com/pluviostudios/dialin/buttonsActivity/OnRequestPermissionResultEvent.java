@@ -5,9 +5,9 @@ package com.pluviostudios.dialin.buttonsActivity;
  */
 public class OnRequestPermissionResultEvent {
 
-    public int requestCode;
-    public String permissions[];
-    public int[] grantResults;
+    final public int requestCode;
+    final public String permissions[];
+    final public int[] grantResults;
 
     public OnRequestPermissionResultEvent(int requestCode, String[] permissions, int[] grantResults) {
         this.requestCode = requestCode;

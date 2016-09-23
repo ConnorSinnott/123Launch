@@ -202,8 +202,13 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
             if (savedInstanceState.containsKey(SAVED_PATH)) {
 
                 mCurrentPath = savedInstanceState.getIntegerArrayList(SAVED_PATH);
-                for (Integer x : mCurrentPath) {
-                    mCurrentNode = mCurrentNode.getChild(x);
+
+                if (mCurrentPath != null) {
+
+                    for (Integer x : mCurrentPath) {
+                        mCurrentNode = mCurrentNode.getChild(x);
+                    }
+
                 }
 
             }

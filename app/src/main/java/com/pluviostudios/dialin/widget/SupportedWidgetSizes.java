@@ -27,7 +27,7 @@ public class SupportedWidgetSizes {
      * <p/>
      * 6. Update the function getWidgetRemoteView below, adding the newly created xml layout in a case statement relevant to the new size
      */
-    public static int[] SUPPORTED_WIDGET_SIZES = new int[]{4, 5};
+    public final static int[] SUPPORTED_WIDGET_SIZES = new int[]{4, 5};
 
     public static ArrayList<Integer> getWidgetButtonIds(int buttonCount) {
 

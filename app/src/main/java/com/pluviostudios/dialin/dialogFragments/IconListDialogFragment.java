@@ -101,9 +101,9 @@ public class IconListDialogFragment extends DialogFragment {
         final int requestCode;
         String dialogTitle;
         boolean showTitle = false;
-        ArrayList<String> titlesList = new ArrayList<>();
-        ArrayList<Uri> uriList = new ArrayList<>();
-        ArrayList<Serializable> mSerializableArrayList = new ArrayList<>();
+        final ArrayList<String> titlesList = new ArrayList<>();
+        final ArrayList<Uri> uriList = new ArrayList<>();
+        final ArrayList<Serializable> mSerializableArrayList = new ArrayList<>();
 
         public Builder(int requestCode) {
             this.requestCode = requestCode;

@@ -19,8 +19,8 @@ import java.util.ArrayList;
  */
 public class IconListDialogAdapter extends BaseAdapter {
 
-    private ArrayList<String> mTitleList;
-    private ArrayList<Uri> mImageList;
+    private final ArrayList<String> mTitleList;
+    private final ArrayList<Uri> mImageList;
 
     public IconListDialogAdapter(ArrayList<String> titleList, ArrayList<Uri> imageList) {
         mTitleList = titleList;
@@ -60,8 +60,8 @@ public class IconListDialogAdapter extends BaseAdapter {
 
     public static class Builder {
 
-        ArrayList<String> titlesList = new ArrayList<>();
-        ArrayList<Uri> uriList = new ArrayList<>();
+        final ArrayList<String> titlesList = new ArrayList<>();
+        final ArrayList<Uri> uriList = new ArrayList<>();
 
         public Builder addItem(String title, Uri imageUri) {
             titlesList.add(title);

@@ -29,7 +29,7 @@ public class WidgetTools {
         int width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
         int height = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT);
         int maxDimension = Math.max(width, height);
-        return (maxDimension + 30) / 70; // Homescreen tile = n * 70 - 30
+        return (maxDimension + 30) / 70; // Home Screen tile = n * 70 - 30
 
     }
 

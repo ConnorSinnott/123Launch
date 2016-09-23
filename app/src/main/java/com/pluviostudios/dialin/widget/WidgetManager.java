@@ -26,7 +26,6 @@ public class WidgetManager {
 
     public static final String TAG = "WidgetManager";
 
-
     /**
      * Queries the database for a list of AppWidgetIds currently using the configuration with the passed ConfigurationID
      *
@@ -169,7 +168,7 @@ public class WidgetManager {
 
                     // Load the configuration via ID, and generate the node located at the end of the pathLoad the node at the end of the path.
                     Node node = StorageManager.loadNodeForWidget(context, configId, path);
-                    if (node.hasAction()) {
+                    if (node != null && node.hasAction()) {
                         // If that node has an action, execute it.
                         node.getAction().execute();
                     }
