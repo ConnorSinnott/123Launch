@@ -19,7 +19,6 @@
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:gravity="center"
-            android:text="No Configurations!"
             android:visibility="gone"/>
 
         <ListView
@@ -38,7 +37,7 @@
         android:layout_height="@android:dimen/app_icon_size"
         android:layout_margin="16dp"
         android:layout_marginTop="-36dp"
-        android:elevation="4sp"
+        app:elevation="4sp"
         app:layout_anchor="@+id/activity_list_frame"
         app:layout_anchorGravity="bottom|right|end"
         app:srcCompat="@drawable/ic_add_white_24px"/>

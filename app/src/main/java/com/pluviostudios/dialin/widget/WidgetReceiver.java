@@ -13,7 +13,7 @@ public class WidgetReceiver extends BroadcastReceiver {
 
     public static final String TAG = "WidgetReceiver";
 
-    public static final String ACTION_BUTTON_CLICKED = "123GoIntent"; // Must also be updated in manifest
+    public static final String ACTION_BUTTON_CLICKED = "123LaunchIntent"; // Must also be updated in manifest
 
     public static final String EXTRA_APP_WIDGET_ID = "extra_appWidgetId";
     public static final String EXTRA_INDEX = "extra_index";

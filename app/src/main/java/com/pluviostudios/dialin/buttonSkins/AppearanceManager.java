@@ -106,7 +106,7 @@ public class AppearanceManager {
                 Uri button2 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_holo_2);
                 Uri button3 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_holo_3);
                 Uri button4 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_holo_4);
-                Uri buttonLaunch = ActionTools.convertResourceToUri(context, R.drawable.ic_blaunch);
+                Uri buttonLaunch = ActionTools.convertResourceToUri(context, R.drawable.ic_button_holo_launch);
 
                 add(new SkinSetItem("Holo", 5, buttonLaunch, button1, button2, button3, button4));
 
@@ -114,7 +114,7 @@ public class AppearanceManager {
                 button2 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_glass_2);
                 button3 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_glass_3);
                 button4 = ActionTools.convertResourceToUri(context, R.drawable.ic_button_glass_4);
-                buttonLaunch = ActionTools.convertResourceToUri(context, R.drawable.ic_blaunch);
+                buttonLaunch = ActionTools.convertResourceToUri(context, R.drawable.ic_button_glass_launch);
 
                 add(new SkinSetItem("Glass", 5, buttonLaunch, button1, button2, button3, button4));
 

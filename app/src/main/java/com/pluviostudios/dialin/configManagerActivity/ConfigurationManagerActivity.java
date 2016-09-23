@@ -21,7 +21,6 @@ import com.pluviostudios.dialin.data.StorageManager;
 import com.pluviostudios.dialin.database.DBContract;
 import com.pluviostudios.dialin.dialogFragments.IconListDialogFragment;
 import com.pluviostudios.dialin.dialogFragments.IconListDialogFragmentEvent;
-import com.pluviostudios.dialin.settings.SettingsActivity;
 import com.pluviostudios.dialin.widget.SupportedWidgetSizes;
 import com.pluviostudios.dialin.widget.WidgetManager;
 import com.pluviostudios.dialin.widget.WidgetTools;
@@ -32,7 +31,6 @@ import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 
-import static android.app.Activity.RESULT_OK;
 import static com.pluviostudios.dialin.appearanceActivity.AppearanceActivity.EXTRA_CHANGES_MADE;
 
 /**
@@ -259,11 +257,6 @@ public class ConfigurationManagerActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.menu_settings: {
-                Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
-                break;
-            }
             case R.id.menu_appearance: {
                 Intent intent = new Intent(this, AppearanceActivity.class);
                 startActivityForResult(intent, AppearanceActivity.APPEARANCE_ACTIVITY_REQUEST_CODE);

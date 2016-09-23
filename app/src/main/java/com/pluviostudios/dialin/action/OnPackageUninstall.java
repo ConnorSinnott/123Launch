@@ -17,8 +17,6 @@ import java.util.ArrayList;
  */
 public class OnPackageUninstall extends BroadcastReceiver {
 
-    //Todo make a volatile column on config which will list items that are outside of the applications control
-
     public static final String TAG = "OnPackageUninstall";
 
     @Override

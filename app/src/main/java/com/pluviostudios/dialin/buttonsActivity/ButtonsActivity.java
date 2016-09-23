@@ -38,7 +38,6 @@ import com.pluviostudios.dialin.data.Node;
 import com.pluviostudios.dialin.data.StorageManager;
 import com.pluviostudios.dialin.database.DBContract;
 import com.pluviostudios.dialin.dialogFragments.IconListDialogAdapter;
-import com.pluviostudios.dialin.settings.SettingsActivity;
 import com.pluviostudios.dialin.utilities.AsyncGetApplicationInfo;
 import com.pluviostudios.dialin.utilities.Utilities;
 
@@ -73,6 +72,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
     private ImageView mButtonInsertImageView;
     private ListView mListView;
     private TextView mPathTextView;
+    private TextView mInstructions;
 
     private long mConfigID;
     private String mConfigTitle;
@@ -143,6 +143,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
         mButtonDelete = findViewById(R.id.activity_buttons_delete_button);
         mButtonInsert = findViewById(R.id.activity_buttons_insert_button);
         mPathTextView = (TextView) findViewById(R.id.activity_buttons_textview_path);
+        mInstructions = (TextView) findViewById(R.id.activity_buttons_instructions);
 
         mButtonInsertImageView = (ImageView) mButtonInsert.findViewById(R.id.activity_buttons_insert_button_image_view);
 
@@ -187,7 +188,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
                 String jsonData = savedInstanceState.getString(SAVED_TEMP_JSON);
                 mRootNode = JSONNodeConverter.convertJSONToNodeTree(jsonData);
             } catch (JSONException e) {
-
+                Log.e(TAG, "onCreate: Could not load saved json", e);
             }
         }
 
@@ -455,6 +456,13 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
 
         buttonToHighlight.getBackground().setColorFilter(getResources().getColor(R.color.colorAccentTransparent), PorterDuff.Mode.MULTIPLY);
         buttonToDeselect.getBackground().clearColorFilter();
+
+        mInstructions.setText(getResources().getString(R.string.activity_buttons_instructions,
+                insertModeEnabled ?
+                        getResources().getString(R.string.insert) :
+                        getResources().getString(R.string.clear)
+        ));
+
     }
 
     @Override
@@ -542,11 +550,6 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
             case R.id.menu_appearance: {
                 Intent intent = new Intent(this, AppearanceActivity.class);
                 startActivityForResult(intent, APPEARANCE_ACTIVITY_REQUEST_CODE);
-                break;
-            }
-            case R.id.menu_settings: {
-                Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
                 break;
             }
         }

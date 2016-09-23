@@ -2,8 +2,6 @@
 <manifest package="com.pluviostudios.dialin"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.CAMERA" />
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -37,7 +35,7 @@
         <!-- 1x4 Widget BaseWidgetProvider -->
         <receiver
             android:name=".widget.SupportedWidgetSizes$Widget4x1Provider"
-            android:label="123Go x4">
+            android:label="123Launch x4">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
             </intent-filter>
@@ -50,7 +48,7 @@
         <!-- 1x5 Widget BaseWidgetProvider -->
         <receiver
             android:name=".widget.SupportedWidgetSizes$Widget5x1Provider"
-            android:label="123Go x5">
+            android:label="123Launch x5">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
             </intent-filter>
@@ -63,7 +61,7 @@
         <!-- 1x4 Vertical Widget BaseWidgetProvider -->
         <receiver
             android:name=".widget.SupportedWidgetSizes$Widget4x1VerticalProvider"
-            android:label="123Go x4 Vertical">
+            android:label="123Launch x4 Vertical">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
             </intent-filter>
@@ -76,7 +74,7 @@
         <!-- 1x5 Vertical Widget BaseWidgetProvider -->
         <receiver
             android:name=".widget.SupportedWidgetSizes$Widget5x1VerticalProvider"
-            android:label="123Go x5 Vertical">
+            android:label="123Launch x5 Vertical">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
             </intent-filter>
@@ -90,7 +88,7 @@
             android:name=".widget.WidgetReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="123GoIntent"/>
+                <action android:name="123LaunchIntent"/>
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </receiver>
@@ -102,10 +100,6 @@
             </intent-filter>
         </receiver>
 
-        <activity
-            android:name=".settings.SettingsActivity"
-            android:label="@string/title_activity_settings">
-        </activity>
     </application>
 
 </manifest>
