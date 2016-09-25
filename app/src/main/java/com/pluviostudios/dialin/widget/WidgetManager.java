@@ -104,8 +104,6 @@ public class WidgetManager {
                     int buttonCount = c.getInt(2);
                     int launchButtonIndex = c.getInt(3);
 
-                    boolean isVertical = WidgetTools.isWidgetVertical(context, appWidgetId);
-
                     // Convert the rawPath (Ex. "0 2 1") into an ArrayList (essentially String.split(" ") )
                     ArrayList<Integer> path = convertStringToPath(rawPath);
 
@@ -113,7 +111,7 @@ public class WidgetManager {
                     Node previewNode = StorageManager.loadNodeForWidget(context, configId, path);
 
                     // Generate the remoteViews using the previewNode
-                    RemoteViews views = generateRemoteViewsFromNode(context, appWidgetId, buttonCount, launchButtonIndex, isVertical, previewNode);
+                    RemoteViews views = generateRemoteViewsFromNode(context, appWidgetId, buttonCount, launchButtonIndex, previewNode);
 
                     // Update the widget
                     appWidgetManager.updateAppWidget(appWidgetId, views);
@@ -198,11 +196,11 @@ public class WidgetManager {
         }
     }
 
-    private static RemoteViews generateRemoteViewsFromNode(Context context, int appWidgetId, int buttonCount, int launchButtonIndex, boolean vertical, Node node) {
+    private static RemoteViews generateRemoteViewsFromNode(Context context, int appWidgetId, int buttonCount, int launchButtonIndex, Node node) {
 
         ArrayList<Integer> buttonIds = SupportedWidgetSizes.getWidgetButtonIds(buttonCount);
         ArrayList<Integer> backgroundIds = SupportedWidgetSizes.getWidgetButtonBackgroundIds(buttonCount);
-        RemoteViews remoteViews = SupportedWidgetSizes.getWidgetRemoteView(context, buttonCount, vertical);
+        RemoteViews remoteViews = SupportedWidgetSizes.getWidgetRemoteView(context, buttonCount);
 
         AppearanceItem appearanceItem = AppearanceManager.getAppearanceItem(context);
 

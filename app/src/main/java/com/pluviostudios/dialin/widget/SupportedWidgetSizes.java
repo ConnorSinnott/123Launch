@@ -67,25 +67,17 @@ public class SupportedWidgetSizes {
 
     }
 
-    public static RemoteViews getWidgetRemoteView(Context context, int buttonCount, boolean vertical) {
+    public static RemoteViews getWidgetRemoteView(Context context, int buttonCount) {
 
         RemoteViews remoteViews;
         switch (buttonCount) {
 
             case 4:
-                if (vertical) {
-                    remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_4x1_vertical);
-                } else {
-                    remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_4x1);
-                }
+                remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_4x1);
                 break;
 
             case 5:
-                if (vertical) {
-                    remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_5x1_vertical);
-                } else {
-                    remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_5x1);
-                }
+                remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_5x1);
                 break;
 
             // Ex.
@@ -111,18 +103,6 @@ public class SupportedWidgetSizes {
      * Created by spectre on 7/26/16.
      */
     public static class Widget5x1Provider extends BaseWidgetProvider {
-    }
-
-    /**
-     * Created by spectre on 7/26/16.
-     */
-    public static class Widget4x1VerticalProvider extends BaseWidgetProvider {
-    }
-
-    /**
-     * Created by spectre on 7/26/16.
-     */
-    public static class Widget5x1VerticalProvider extends BaseWidgetProvider {
     }
 
 }

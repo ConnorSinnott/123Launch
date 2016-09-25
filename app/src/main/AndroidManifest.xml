@@ -58,32 +58,6 @@
                 android:resource="@xml/widget_5x1_info"/>
         </receiver>
 
-        <!-- 1x4 Vertical Widget BaseWidgetProvider -->
-        <receiver
-            android:name=".widget.SupportedWidgetSizes$Widget4x1VerticalProvider"
-            android:label="123Launch x4 Vertical">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-            </intent-filter>
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_4x1_vertical_info"/>
-        </receiver>
-
-        <!-- 1x5 Vertical Widget BaseWidgetProvider -->
-        <receiver
-            android:name=".widget.SupportedWidgetSizes$Widget5x1VerticalProvider"
-            android:label="123Launch x5 Vertical">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-            </intent-filter>
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_5x1_vertical_info"/>
-        </receiver>
-
         <receiver
             android:name=".widget.WidgetReceiver"
             android:exported="false">
