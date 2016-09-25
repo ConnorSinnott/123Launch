@@ -5,6 +5,16 @@
               android:layout_height="match_parent"
               android:orientation="vertical">
 
+    <TextView
+        android:id="@+id/activty_configuration_manager_select_config"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="#424242"
+        android:gravity="center"
+        android:text="@string/select_a_configuration"
+        android:textColor="#FFFFFF"
+        android:visibility="gone"/>
+
     <com.viewpagerindicator.TitlePageIndicator
         android:id="@+id/activity_configuration_manager_titles"
         android:layout_width="fill_parent"

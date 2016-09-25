@@ -20,6 +20,7 @@
     <string name="unset">Unset</string>
     <string name="not_yet_implemented">Not Yet Implemented</string>
     <string name="missing_configuration">Missing configuration</string>
-    <string name="no_configurations">No Configurations</string>
+    <string name="no_configurations">No configurations</string>
+    <string name="select_a_configuration">Select a configuration</string>
 
 </resources>
