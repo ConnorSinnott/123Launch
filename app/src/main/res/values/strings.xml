@@ -5,7 +5,7 @@
     <string name="cancel">Cancel</string>
     <string name="launch">Launch %s</string>
     <string name="title_activity_settings">Settings</string>
-    <string name="path">Path: Home %s</string>
+    <string name="path">Home %s</string>
     <string name="rename">Rename</string>
     <string name="switch_launch_side">Switch launch side</string>
     <string name="widget_appearance">Widget Appearance</string>
@@ -13,12 +13,13 @@
     <string name="skinset">Skin Set</string>
 
     <string name="activity_buttons_instructions">Click to %s, long click to navigate</string>
-    <string name="insert">Insert</string>
-    <string name="clear">Clear</string>
+    <string name="insert">insert</string>
+    <string name="clear">clear</string>
 
     <string name="available_applications">Available Applications</string>
     <string name="unset">Unset</string>
     <string name="not_yet_implemented">Not Yet Implemented</string>
     <string name="missing_configuration">Missing configuration</string>
+    <string name="no_configurations">No Configurations</string>
 
 </resources>

@@ -366,9 +366,14 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     private void updatePath() {
+
         String path = "";
-        for (Integer x : mCurrentPath) {
-            path += " -> " + (x + 1);
+        if (mCurrentPath.size() > 15) {
+            path = "● ... ";
+        } else {
+            for (Integer x : mCurrentPath) {
+                path += "● " + (x + 1) + " ";
+            }
         }
 
         mPathTextView.setText(getResources().getString(R.string.path, path));

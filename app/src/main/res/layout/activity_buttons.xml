@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".buttonsActivity.ButtonsActivity">
 
-
     <FrameLayout
         android:id="@+id/activity_buttons_top_frame"
         android:layout_width="match_parent"
@@ -17,7 +16,17 @@
         android:paddingLeft="2dp"
         android:paddingRight="2dp"
         android:paddingStart="2dp"
-        android:paddingTop="10dp"
+        android:paddingTop="24dp"
+        />
+
+    <TextView
+        android:id="@+id/activity_buttons_textview_path"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="@+id/activity_buttons_top_frame"
+        android:background="#46ffffff"
+        android:gravity="center"
+        android:text="@string/path"
         />
 
     <TextView
@@ -36,27 +45,11 @@
         android:background="@color/colorPrimary"
         />
 
-    <TextView
-        android:id="@+id/activity_buttons_textview_path"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/activity_buttons_divider"
-        android:text="@string/path"/>
-
-    <View
-        android:id="@+id/activity_buttons_divider_3"
-        android:layout_width="match_parent"
-        android:layout_height="4dp"
-        android:layout_below="@id/activity_buttons_textview_path"
-        android:background="@color/colorPrimary"
-        />
-
-
     <LinearLayout
         android:id="@+id/activity_buttons_controls"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/activity_buttons_divider_3"
+        android:layout_below="@id/activity_buttons_divider"
         android:layout_marginTop="4dp"
         android:weightSum="2">
 
