@@ -32,6 +32,7 @@ public class IconListDialogFragment extends DialogFragment {
     public static final String EXTRA_TITLE_LIST = "extra_title_list";
     public static final String EXTRA_URI_LIST = "extra_uri_list";
     public static final String EXTRA_SHOW_TITLE = "extra_show_title";
+    public static final String EXTRA_USE_PICASSO = "extra_use_picasso";
     public static final String EXTRA_TITLE = "extra_title";
 
     private int requestCode;
@@ -64,6 +65,7 @@ public class IconListDialogFragment extends DialogFragment {
         requestCode = getArguments().getInt(EXTRA_REQUEST_CODE);
         titleList = getArguments().getStringArrayList(EXTRA_TITLE_LIST);
         uriList = getArguments().getParcelableArrayList(EXTRA_URI_LIST);
+        boolean usePicasso = getArguments().getBoolean(EXTRA_USE_PICASSO);
         boolean showTitle = getArguments().getBoolean(EXTRA_SHOW_TITLE);
         String dialogTitle = getArguments().getString(EXTRA_TITLE);
 
@@ -72,6 +74,7 @@ public class IconListDialogFragment extends DialogFragment {
         }
 
         IconListDialogAdapter.Builder iconListDialogAdapterBuilder = new IconListDialogAdapter.Builder();
+        iconListDialogAdapterBuilder.usePicasso(usePicasso);
         for (int i = 0; i < titleList.size(); i++) {
             iconListDialogAdapterBuilder.addItem(titleList.get(i), uriList.get(i));
         }
@@ -101,12 +104,14 @@ public class IconListDialogFragment extends DialogFragment {
         final int requestCode;
         String dialogTitle;
         boolean showTitle = false;
+        boolean usePicasso = false;
         final ArrayList<String> titlesList = new ArrayList<>();
         final ArrayList<Uri> uriList = new ArrayList<>();
         final ArrayList<Serializable> mSerializableArrayList = new ArrayList<>();
 
         public Builder(int requestCode) {
             this.requestCode = requestCode;
+
         }
 
         public Builder addItem(String title, Uri imageUri) {
@@ -130,6 +135,11 @@ public class IconListDialogFragment extends DialogFragment {
             return this;
         }
 
+        public Builder usePicasso(boolean usePicasso) {
+            this.usePicasso = usePicasso;
+            return this;
+        }
+
         public IconListDialogFragment build() {
 
             IconListDialogFragment iconListDialogFragment2 = new IconListDialogFragment();
@@ -139,6 +149,7 @@ public class IconListDialogFragment extends DialogFragment {
             extras.putParcelableArrayList(EXTRA_URI_LIST, uriList);
             extras.putString(EXTRA_TITLE, dialogTitle);
             extras.putBoolean(EXTRA_SHOW_TITLE, showTitle);
+            extras.putBoolean(EXTRA_USE_PICASSO, usePicasso);
             iconListDialogFragment2.setArguments(extras);
             return iconListDialogFragment2;
 

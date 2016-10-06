@@ -32,7 +32,8 @@ public class AsyncGetApplicationInfo extends AsyncTask<Void, Void, ArrayList<App
         while (applicationInfoList.size() > 0) {
 
             ApplicationInfo appInfo = applicationInfoList.remove(0);
-            if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0 || appInfo.icon == 0) {
+
+            if(appInfo.icon == 0) {
                 continue;
             }
 

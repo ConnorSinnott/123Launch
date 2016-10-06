@@ -304,6 +304,7 @@ public class ButtonsActivity extends AppCompatActivity implements View.OnClickLi
                     builder.addItem(applicationName, applicationUri);
 
                 }
+                builder.usePicasso(true);
                 mListView.setAdapter(builder.build());
                 mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override

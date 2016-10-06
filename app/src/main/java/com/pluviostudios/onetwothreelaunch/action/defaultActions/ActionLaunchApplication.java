@@ -1,7 +1,11 @@
 package com.pluviostudios.onetwothreelaunch.action.defaultActions;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.util.Log;
 
 import com.pluviostudios.onetwothreelaunch.R;
 import com.pluviostudios.onetwothreelaunch.action.Action;
@@ -61,6 +65,30 @@ public class ActionLaunchApplication extends Action {
         if (actionParameters.size() > 0) {
             mApplicationName = getActionParameters().get(INDEX_APPLICATION_NAME);
             mApplicationIcon = Uri.parse(getActionParameters().get(INDEX_APPLICATION_ICON_URI));
+        }
+    }
+
+    public void invalidateApplicationData(Context context) {
+        String applicationPackageName = getActionParameters().get(INDEX_APPLICATION_PACKAGE_NAME);
+        try {
+
+            ApplicationInfo app = context.getApplicationContext().getPackageManager().getApplicationInfo(applicationPackageName, 0);
+            if(app != null) {
+
+                Uri applicationIconUri = ActionTools.getForeignApplicationImageUriFromInfo(app);
+                if (applicationIconUri != null) {
+                    getActionParameters().set(INDEX_APPLICATION_ICON_URI, applicationIconUri.toString());
+                } else {
+                    Log.e(TAG, "invalidateApplicationData: Unable to invalidate icon");
+                }
+
+                String applicationName = ActionTools.getForeignApplicationNameFromInfo(context, app);
+                getActionParameters().set(INDEX_APPLICATION_NAME, applicationName);
+
+            }
+
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(TAG, "invalidateApplicationData: ", e);
         }
     }
 

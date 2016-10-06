@@ -67,10 +67,11 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".action.OnPackageUninstall">
+        <receiver android:name=".action.OnPackageChangedReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_FULLY_REMOVED"/>
-                <data android:scheme="package" />
+                <action android:name="android.intent.action.PACKAGE_REPLACED"/>
+                <data android:scheme="package"/>
             </intent-filter>
         </receiver>
 

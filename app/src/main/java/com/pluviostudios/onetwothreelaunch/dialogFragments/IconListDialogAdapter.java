@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.pluviostudios.onetwothreelaunch.R;
 import com.pluviostudios.onetwothreelaunch.action.ActionTools;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -21,10 +22,12 @@ public class IconListDialogAdapter extends BaseAdapter {
 
     private final ArrayList<String> mTitleList;
     private final ArrayList<Uri> mImageList;
+    private final boolean mUsePicasso;
 
-    public IconListDialogAdapter(ArrayList<String> titleList, ArrayList<Uri> imageList) {
+    public IconListDialogAdapter(ArrayList<String> titleList, ArrayList<Uri> imageList, boolean usePicasso) {
         mTitleList = titleList;
         mImageList = imageList;
+        mUsePicasso = usePicasso;
     }
 
     @Override
@@ -51,7 +54,11 @@ public class IconListDialogAdapter extends BaseAdapter {
         Uri displayUri = mImageList.get(position);
         String displayName = mTitleList.get(position);
 
-        ((ImageView) convertView.findViewById(R.id.list_item_action_image)).setImageURI(displayUri);
+        if (mUsePicasso) {
+            Picasso.with(parent.getContext()).load(displayUri).into(((ImageView) convertView.findViewById(R.id.list_item_action_image)));
+        } else {
+            ((ImageView) convertView.findViewById(R.id.list_item_action_image)).setImageURI(displayUri);
+        }
         ((TextView) convertView.findViewById(R.id.list_item_action_text_view)).setText(displayName);
 
         return convertView;
@@ -60,6 +67,7 @@ public class IconListDialogAdapter extends BaseAdapter {
 
     public static class Builder {
 
+        private boolean usePicasso = false;
         final ArrayList<String> titlesList = new ArrayList<>();
         final ArrayList<Uri> uriList = new ArrayList<>();
 
@@ -73,8 +81,13 @@ public class IconListDialogAdapter extends BaseAdapter {
             return addItem(title, ActionTools.convertResourceToUri(context, resourceId));
         }
 
+        public Builder usePicasso(boolean usePicasso) {
+            this.usePicasso = usePicasso;
+            return this;
+        }
+
         public IconListDialogAdapter build() {
-            return new IconListDialogAdapter(titlesList, uriList);
+            return new IconListDialogAdapter(titlesList, uriList, usePicasso);
         }
 
     }
